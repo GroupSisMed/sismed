@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receituário de Controle Especial</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .main-title {
+            text-align: center;
+            margin: 1.5rem 0;
+            color: var(--primary);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-print {
+            background-color: var(--accent);
+        }
+        
+        .btn-print:hover {
+            background-color: #c0392b;
+        }
+        
+        .print-area {
+            background: white;
+            padding: 2rem;
+            border: 1px solid #ddd;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1rem;
+        }
+        
+        .print-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .print-logo {
+            max-height: 80px;
+        }
+        
+        .print-title {
+            flex-grow: 1;
+            text-align: center;
+        }
+        
+        .print-content {
+            line-height: 1.8;
+        }
+        
+        .signature-area {
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .signature-line {
+            width: 300px;
+            border-top: 1px solid #333;
+            margin: 0 auto;
+            padding-top: 0.5rem;
+        }
+        
+        .unidade-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        /* Estilos específicos para o receituário de controle especial */
+        .receituario-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .via {
+            width: 48%;
+            border: 1px solid #333;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .via-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .emitente-section {
+            margin-bottom: 15px;
+        }
+        
+        .emitente-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .paciente-section {
+            margin-bottom: 15px;
+        }
+        
+        .prescricao-section {
+            margin-bottom: 15px;
+        }
+        
+        .prescricao-item {
+            margin-bottom: 10px;
+        }
+        
+        .prescricao-medicamento {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .assinatura-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .identificacao-section {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .identificacao-box {
+            width: 48%;
+        }
+        
+        .identificacao-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .data-assinatura {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+                border: none;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Sistema de Prescrição Médica</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="main-title">Receituário de Controle Especial</h1>
+        
+        <div class="card">
+            <div class="form-group">
+                <label for="medico">Nome do Médico</label>
+                <input type="text" id="medico" placeholder="Nome completo do médico" value="HOMERO PEREIRA">
+            </div>
+            
+            <div class="form-group">
+                <label for="crm">CRM</label>
+                <input type="text" id="crm" placeholder="Número do CRM" value="CRM-MA: 16XXX">
+            </div>
+            
+            <div class="form-group">
+                <label for="endereco-medico">Endereço do Consultório</label>
+                <input type="text" id="endereco-medico" placeholder="Endereço completo" value="Av. João Santana, 30 - Parque Vitória, São José de Ribamar - MA, 65066-190">
+            </div>
+            
+            <div class="form-group">
+                <label for="paciente">Nome do Paciente</label>
+                <input type="text" id="paciente" placeholder="Nome completo do paciente">
+            </div>
+            
+            <div class="form-group">
+                <label for="endereco-paciente">Endereço do Paciente</label>
+                <input type="text" id="endereco-paciente" placeholder="Endereço completo do paciente">
+            </div>
+            
+            <div class="form-group">
+                <label for="medicamentos">Medicamentos de Controle Especial</label>
+                <textarea id="medicamentos" rows="5" placeholder="Digite os medicamentos de controle especial e suas posologias...">1-TRAMADOL 50 MG -------------------------------- 03 CXS CAIXA
+TOMAR 01 COMPRIMIDO  DE 8/8 HORAS SE DOR INTENSA.</textarea>
+            </div>
+            
+            <button id="gerar-receituario">Gerar Receituário</button>
+        </div>
+        
+        <!-- Área de Impressão -->
+        <div id="print-area" class="print-area">
+            <div class="receituario-container">
+                <!-- Primeira Via (Farmácia) -->
+                <div class="via">
+                    <div class="via-title">RECEITUÁRIO CONTROLE ESPECIAL</div>
+                    
+                    <div class="emitente-section">
+                        <div class="via-title">IDENTIFICAÇÃO DO EMITENTE</div>
+                        <div class="emitente-line">
+                            <span id="print-medico">HOMERO PEREIRA</span>
+                            <span>1ª VIA FARMÁCIA</span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>Médico</span>
+                            <span>2ª VIA PACIENTE</span>
+                        </div>
+                        <div class="emitente-line">
+                            <span id="print-crm">CRM-MA: 16XXX</span>
+                            <span></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span id="print-endereco-medico">Av. João Santana, 30 - Parque Vitória</span>
+                            <span></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>São José de Ribamar - MA, 65066-190</span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="paciente-section">
+                        <div class="emitente-line">
+                            <span>Paciente:</span>
+                            <span id="print-paciente"></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>Endereço:</span>
+                            <span id="print-endereco-paciente"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="prescricao-section">
+                        <div class="via-title">Prescrição:</div>
+                        <div id="print-medicamentos" class="prescricao-item">
+                            <!-- Conteúdo será inserido via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="data-assinatura">
+                        <div>SÃO LUÍS - MA, <span id="print-data"></span></div>
+                        <div>Médico - Carimbo</div>
+                    </div>
+                    
+                    <div class="identificacao-section">
+                        <div class="identificacao-box">
+                            <div class="via-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+                            <div class="identificacao-line">
+                                <span>Nome:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Ident.:</span>
+                                <span>Órg.Emissor:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>End.:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Cidade:</span>
+                                <span>UF:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Data_____/_____/_______</span>
+                                <span></span>
+                            </div>
+                        </div>
+                        
+                        <div class="identificacao-box">
+                            <div class="via-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+                            <div class="identificacao-line">
+                                <span>Nome:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Ident.:</span>
+                                <span>Órg.Emissor:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>End.:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Cidade:</span>
+                                <span>UF:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Data_____/_____/_______</span>
+                                <span></span>
+                            </div>
+                            <div class="assinatura-section">
+                                <span>Assinatura do Farmacêutico</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda Via (Paciente) -->
+                <div class="via">
+                    <div class="via-title">RECEITUÁRIO CONTROLE ESPECIAL</div>
+                    
+                    <div class="emitente-section">
+                        <div class="via-title">IDENTIFICAÇÃO DO EMITENTE</div>
+                        <div class="emitente-line">
+                            <span id="print-medico2">HOMERO PEREIRA</span>
+                            <span>1ª VIA FARMÁCIA</span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>Médico</span>
+                            <span>2ª VIA PACIENTE</span>
+                        </div>
+                        <div class="emitente-line">
+                            <span id="print-crm2">CRM-MA: 16XXX</span>
+                            <span></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span id="print-endereco-medico2">Av. João Santana, 30 - Parque Vitória</span>
+                            <span></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>São José de Ribamar - MA, 65066-190</span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="paciente-section">
+                        <div class="emitente-line">
+                            <span>Paciente:</span>
+                            <span id="print-paciente2"></span>
+                        </div>
+                        <div class="emitente-line">
+                            <span>Endereço:</span>
+                            <span id="print-endereco-paciente2"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="prescricao-section">
+                        <div class="via-title">Prescrição:</div>
+                        <div id="print-medicamentos2" class="prescricao-item">
+                            <!-- Conteúdo será inserido via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="data-assinatura">
+                        <div>SÃO LUÍS - MA, <span id="print-data2"></span></div>
+                        <div>Médico - Carimbo</div>
+                    </div>
+                    
+                    <div class="identificacao-section">
+                        <div class="identificacao-box">
+                            <div class="via-title">IDENTIFICAÇÃO DO COMPRADOR</div>
+                            <div class="identificacao-line">
+                                <span>Nome:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Ident.:</span>
+                                <span>Órg.Emissor:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>End.:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Cidade:</span>
+                                <span>UF:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Data_____/_____/_______</span>
+                                <span></span>
+                            </div>
+                        </div>
+                        
+                        <div class="identificacao-box">
+                            <div class="via-title">IDENTIFICAÇÃO DO FORNECEDOR</div>
+                            <div class="identificacao-line">
+                                <span>Nome:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Ident.:</span>
+                                <span>Órg.Emissor:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>End.:</span>
+                                <span></span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Cidade:</span>
+                                <span>UF:</span>
+                            </div>
+                            <div class="identificacao-line">
+                                <span>Data_____/_____/_______</span>
+                                <span></span>
+                            </div>
+                            <div class="assinatura-section">
+                                <span>Assinatura do Farmacêutico</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="no-print" style="text-align: center; margin-top: 1rem;">
+            <button id="btn-print" class="btn-print" style="display: none;">Imprimir Documento</button>
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const printArea = document.getElementById('print-area');
+        const btnPrint = document.getElementById('btn-print');
+        const btnGerar = document.getElementById('gerar-receituario');
+
+        // Elementos de formulário
+        const medicoInput = document.getElementById('medico');
+        const crmInput = document.getElementById('crm');
+        const enderecoMedicoInput = document.getElementById('endereco-medico');
+        const pacienteInput = document.getElementById('paciente');
+        const enderecoPacienteInput = document.getElementById('endereco-paciente');
+        const medicamentosInput = document.getElementById('medicamentos');
+
+        // Elementos de impressão
+        const printMedico = document.getElementById('print-medico');
+        const printMedico2 = document.getElementById('print-medico2');
+        const printCrm = document.getElementById('print-crm');
+        const printCrm2 = document.getElementById('print-crm2');
+        const printEnderecoMedico = document.getElementById('print-endereco-medico');
+        const printEnderecoMedico2 = document.getElementById('print-endereco-medico2');
+        const printPaciente = document.getElementById('print-paciente');
+        const printPaciente2 = document.getElementById('print-paciente2');
+        const printEnderecoPaciente = document.getElementById('print-endereco-paciente');
+        const printEnderecoPaciente2 = document.getElementById('print-endereco-paciente2');
+        const printMedicamentos = document.getElementById('print-medicamentos');
+        const printMedicamentos2 = document.getElementById('print-medicamentos2');
+        const printData = document.getElementById('print-data');
+        const printData2 = document.getElementById('print-data2');
+
+        // Gerar Receituário
+        btnGerar.addEventListener('click', () => {
+            const medico = medicoInput.value;
+            const crm = crmInput.value;
+            const enderecoMedico = enderecoMedicoInput.value;
+            const paciente = pacienteInput.value;
+            const enderecoPaciente = enderecoPacienteInput.value;
+            const medicamentos = medicamentosInput.value;
+            
+            if (!medico || !crm || !enderecoMedico || !paciente || !enderecoPaciente || !medicamentos) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            // Atualizar dados na primeira via
+            printMedico.textContent = medico;
+            printCrm.textContent = crm;
+            printEnderecoMedico.textContent = enderecoMedico;
+            printPaciente.textContent = paciente;
+            printEnderecoPaciente.textContent = enderecoPaciente;
+            printMedicamentos.innerHTML = medicamentos.replace(/\n/g, '<br>');
+            
+            // Atualizar dados na segunda via
+            printMedico2.textContent = medico;
+            printCrm2.textContent = crm;
+            printEnderecoMedico2.textContent = enderecoMedico;
+            printPaciente2.textContent = paciente;
+            printEnderecoPaciente2.textContent = enderecoPaciente;
+            printMedicamentos2.innerHTML = medicamentos.replace(/\n/g, '<br>');
+            
+            // Atualizar data
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            printData.textContent = dataAtual;
+            printData2.textContent = dataAtual;
+            
+            printArea.style.display = 'block';
+            btnPrint.style.display = 'inline-block';
+        });
+
+        // Imprimir documento
+        btnPrint.addEventListener('click', () => {
+            window.print();
+        });
+    </script>
+</body>
+</html>

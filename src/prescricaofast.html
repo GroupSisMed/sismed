@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plantão Rápido – Prescrições</title>
+  <style>
+    :root { --bg:#0b1220; --card:#121b2f; --muted:#9fb0d0; --text:#eaf0ff; --accent:#5aa2ff; --border:#223052; }
+    *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{ margin:0; background:linear-gradient(180deg,#070c18, var(--bg)); color:var(--text); }
+    header{ padding:18px 16px; border-bottom:1px solid var(--border); position:sticky; top:0; backdrop-filter: blur(8px); background:rgba(7,12,24,.85); z-index:10;}
+    h1{ margin:0 0 8px 0; font-size:18px; font-weight:700;}
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    select, input{
+      background:#0e1730; color:var(--text); border:1px solid var(--border);
+      padding:10px 12px; border-radius:10px; outline:none; min-width:240px;
+    }
+    input{ min-width:260px; flex:1; }
+    main{ padding:16px; max-width:1100px; margin:0 auto;}
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--border); border-radius:14px; padding:14px;
+    }
+    .title{ font-weight:800; font-size:14px; margin:0 0 10px 0; letter-spacing:.4px; text-transform:uppercase; color:#dbe6ff;}
+    .badge{ display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); margin:0 6px 8px 0; }
+    ul{ margin:8px 0 0 18px; padding:0; }
+    li{ margin:7px 0; line-height:1.35; }
+    .muted{ color:var(--muted); font-size:12px; margin-top:10px; }
+    .tools{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      background:#0e1730; color:var(--text); border:1px solid var(--border);
+      padding:10px 12px; border-radius:10px; cursor:pointer;
+    }
+    button:hover{ border-color:var(--accent); }
+    .footer{ padding:14px 16px; color:var(--muted); font-size:12px; border-top:1px solid var(--border); margin-top:18px;}
+    .k{ color:#cfe0ff; font-weight:700;}
+    .warn{ color:#ffd38a; }
+    pre{
+      white-space:pre-wrap; word-break:break-word;
+      background:#0e1730; border:1px solid var(--border);
+      border-radius:12px; padding:12px; margin:10px 0 0 0; color:#dce7ff;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Plantão Rápido – Consulta de Prescrições</h1>
+  <div class="row">
+    <select id="condicao">
+      <option value="">Selecione uma condição</option>
+      <option value="PS DOR ABDOMINAL SEM NAUSEA">PS – DOR ABDOMINAL (SEM NÁUSEAS)</option>
+      <option value="PS DOR ABDOMINAL COM NAUSEA">PS – DOR ABDOMINAL (COM NÁUSEAS)</option>
+      <option value="PS DOR OSTEOMUSCULAR">PS – DOR OSTEO/MUSCULAR</option>
+      <option value="PS COLICA RENAL">PS – CÓLICA RENAL</option>
+      <option value="PS CEFALEIA">PS – CEFALÉIA AGUDA</option>
+      <option value="PS DOR + ALERGIA">PS – DOR + COMPONENTE ALÉRGICO</option>
+      <option value="PS DOR + NAUSEA">PS – DOR + NÁUSEA ISOLADA</option>
+
+      <!-- NOVO: Modelos de Evolução / Exame Físico / Complementares -->
+      <option value="EXAME FISICO MASCULINO">EXAME FÍSICO – MASCULINO (MODELO)</option>
+      <option value="EXAME FISICO FEMININO">EXAME FÍSICO – FEMININO (MODELO)</option>
+      <option value="CONDUTA (MODELO)">CONDUTA (MODELO)</option>
+      <option value="EXAME FISICO COMPLEMENTAR">EXAME FÍSICO COMPLEMENTAR</option>
+      <option value="OTOSCOPIA (MODELO)">OTOSCOPIA (MODELO)</option>
+      <option value="REAVALIACAO (MODELO)">REAVALIAÇÃO (MODELO)</option>
+      <option value="EXAMES COMPLEMENTARES (MODELO)">EXAMES COMPLEMENTARES (MODELO)</option>
+
+      <!-- NOVO: Arsenal UTI/Urgência -->
+      <option value="MEDICAMENTOS URGENCIA/UTI - ARSENAL ARTUR BATISTA">MEDICAMENTOS URGÊNCIA/UTI – ARSENAL ARTUR BATISTA</option>
+      <option value="MEDICACOES URGENCIA VIA ORAL - ARSENAL">MEDICAÇÕES URGÊNCIA VIA ORAL – ARSENAL</option>
+    </select>
+
+    <input id="busca" type="search" placeholder="Buscar (ex: dipirona, cetoprofeno, Glasgow, Murphy, ECG, Rx, etc.)..." />
+    <button id="btnCopiar">Copiar prescrição (texto)</button>
+    <button id="btnMostrarJson">Mostrar/ocultar JSON</button>
+  </div>
+</header>
+
+<main>
+  <div id="conteudo" class="grid"></div>
+  <pre id="jsonBox"></pre>
+
+  <div class="footer">
+    <div><span class="k">Dica de uso:</span> selecione a condição e use a busca para filtrar itens. O botão “Copiar” copia o texto exibido.</div>
+    <div class="warn">Observação: conteúdo serve como apoio rápido; ajuste conforme história, exame e contraindicações.</div>
+  </div>
+</main>
+
+<script>
+  // Banco de dados de prescrições (edite livremente)
+  // Padrão: CONDIÇÃO -> VIA -> [ "MEDICAMENTO - QTD - POSOLOGIA/INSTRUÇÃO" ]
+  const RX = {
+    // ===== Protocolos clássicos PS (com Dipirona 1g/2mL e opção IM) =====
+    "PS DOR ABDOMINAL SEM NAUSEA": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "BUTILBROMETO DE ESCOPOLAMINA 20 MG - 01 ampola - 1 AMP + 10 mL AD EV"
+      ],
+      "ALTERNATIVA IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM",
+        "BUTILBROMETO DE ESCOPOLAMINA 20 MG - 01 ampola - 1 AMP IM"
+      ]
+    },
+    "PS DOR ABDOMINAL COM NAUSEA": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "BUTILBROMETO DE ESCOPOLAMINA 20 MG - 01 ampola - 1 AMP + 10 mL AD EV",
+        "BROMOPRIDA 10 MG - 01 ampola - 2 mL + 18 mL AD EV"
+      ],
+      "ALTERNATIVA IM (SEM ACESSO VENOSO)": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM",
+        "PROMETAZINA 50 MG - 01 ampola - 1 AMP IM"
+      ]
+    },
+    "PS DOR OSTEOMUSCULAR": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "CETOPROFENO 100 MG - 01 ampola - 1 AMP + 100 mL SF 0,9% EV"
+      ],
+      "ALTERNATIVA IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM",
+        "CETOPROFENO 100 MG - 01 ampola - 1 AMP IM"
+      ]
+    },
+    "PS COLICA RENAL": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "CETOPROFENO 100 MG - 01 ampola - 1 AMP + 100 mL SF 0,9% EV",
+        "BROMOPRIDA 10 MG - 01 ampola - 2 mL + 18 mL AD EV"
+      ],
+      "ALTERNATIVA IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM",
+        "CETOPROFENO 100 MG - 01 ampola - 1 AMP IM"
+      ],
+      "SE DOR INTENSA": [
+        "MORFINA 10 MG/1 ML - 01 ampola - 1 mL + 9 mL AD (10 mL). Aplicar 3–5 mL EV titulado"
+      ]
+    },
+    "PS CEFALEIA": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "BROMOPRIDA 10 MG - 01 ampola - 2 mL + 18 mL AD EV"
+      ],
+      "ALTERNATIVA IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM"
+      ],
+      "SE CRISE RECORRENTE": [
+        "DEXAMETASONA 4–8 MG - 01 ampola - EV (conforme apresentação disponível)"
+      ]
+    },
+    "PS DOR + ALERGIA": {
+      "USO EV / IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - EV: 1 AMP + 8 mL AD | IM: 1 AMP IM",
+        "DEXAMETASONA 4–8 MG - 01 ampola - EV (conforme apresentação disponível)",
+        "PROMETAZINA 50 MG - 01 ampola - 1 AMP IM"
+      ]
+    },
+    "PS DOR + NAUSEA": {
+      "USO EV": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP + 8 mL AD EV",
+        "BROMOPRIDA 10 MG - 01 ampola - 2 mL + 18 mL AD EV"
+      ],
+      "ALTERNATIVA IM": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 1 AMP IM"
+      ]
+    },
+
+    // ===== Itens transcritos das suas prescrições (imagens) + diluições comuns =====
+    "DILUICOES COMUNS (EMERGENCIA)": {
+      "ANALGESIA": [
+        "DIPIRONA 1 G/2 ML - 01 ampola - 01 amp + AD 10 mL EV / 01 amp IM",
+        "DIPIRONA 1 G/2 ML - 02 ampolas - 02 amp + AD 20 mL EV",
+        "ESCOPOLAMINA 20 MG - 01 ampola - 01 amp + AD 10 mL EV / 01 amp IM",
+        "ESCOPOLAMINA + DIPIRONA - 01 ampola - 01 amp + AD 20 mL EV (Obs: alguns serviços preferem 15 mL)",
+        "DICLOFENACO 75 MG - 01 ampola - IM",
+        "TENOXICAM 20 MG - 01 ampola - 01 amp + AD 10 mL EV",
+        "CETOPROFENO 100 MG - 01 ampola - + SF 0,9% 100 mL EV",
+        "TRAMADOL 100 MG - 01 ampola - 01 amp + SF 0,9% ou SG 5% 100 mL EV / 01 amp SC",
+        "MORFINA 10 MG/1 ML - 01 ampola - 01 mL + AD 09 mL; aplicar 03–05 mL EV",
+        "FENTANIL - conforme serviço - Pode usar puro; pode diluir conforme necessidade"
+      ]
+    },
+
+    // ===== Prescrições adicionadas anteriormente =====
+    "ASMA": {
+      "USO ORAL": [
+        "PREDNISONA 20 MG - 05 comprimidos - Tomar 01 comprimido VO pela manhã por 5 dias"
+      ],
+      "USO INALATORIO": [
+        "SALBUTAMOL SPRAY 100 MCG - 01 frasco - Inalar 02 jatos de 6/6h por 5 dias"
+      ]
+    },
+    "DENGUE": {
+      "USO ORAL": [
+        "PARACETAMOL 750 MG - 01 caixa - Tomar 01 comprimido de 6/6h se dor ou febre",
+        "DIPIRONA 500 MG - 01 caixa - Tomar 02 comprimidos de 6/6h se dor ou febre"
+      ]
+    },
+    "ENXAQUECA": {
+      "USO ORAL": [
+        "NAPROXENO 500 MG - 01 caixa - Tomar 01 comprimido de 12/12h por até 5 dias",
+        "METOCLOPRAMIDA 10 MG - 01 caixa - Tomar 01 comprimido de 8/8h se náuseas ou vômitos"
+      ]
+    },
+    "COLICA NEFRETICA": {
+      "USO ORAL": [
+        "CETOPROFENO 150 MG - 01 caixa - Tomar 01 comprimido de 12/12h por até 5 dias",
+        "METOCLOPRAMIDA 10 MG - 01 caixa - Tomar 01 comprimido de 8/8h se náuseas ou vômitos"
+      ]
+    },
+    "RINOSSINUSITE": {
+      "USO ORAL": [
+        "LORATADINA 10 MG - 01 caixa - Tomar 01 comprimido ao dia por 10 dias",
+        "DIPIRONA 500 MG - 01 caixa - Tomar 01 comprimido de 8/8h se dor ou febre"
+      ],
+      "USO NASAL": [
+        "SORO FISIOLOGICO 0,9% - 01 frasco - Lavar as narinas 3x ao dia"
+      ]
+    },
+    "OTITE EXTERNA": {
+      "USO OTOLOGICO": [
+        "OTOSPORIN - 01 frasco - Aplicar 03 gotas no ouvido afetado de 8/8h por 7 dias"
+      ],
+      "USO ORAL": [
+        "DIPIRONA 500 MG - 01 caixa - Tomar 01 comprimido de 6/6h se dor"
+      ]
+    },
+    "AMIGDALITE ESTREPTOCOCICA": {
+      "USO ORAL": [
+        "AMOXICILINA 500 MG - 21 comprimidos - Tomar 01 comprimido de 8/8h por 7 dias",
+        "DIPIRONA 500 MG - 01 caixa - Tomar 01 comprimido de 6/6h se dor ou febre"
+      ]
+    },
+    "HERPES ZOSTER": {
+      "USO ORAL": [
+        "ACICLOVIR 800 MG - 35 comprimidos - Tomar 01 comprimido de 5x/dia por 7 dias",
+        "DIPIRONA 500 MG - 01 caixa - Tomar 01 comprimido de 6/6h se dor"
+      ]
+    },
+    "ESCABIOSE": {
+      "USO TOPICO": [
+        "PERMETRINA 5% - 01 frasco - Aplicar do pescoço para baixo à noite, repetir após 7 dias"
+      ],
+      "USO ORAL": [
+        "LORATADINA 10 MG - 01 caixa - Tomar 01 comprimido ao dia se prurido"
+      ]
+    },
+    "DISMENORREIA": {
+      "USO ORAL": [
+        "ACIDO MEFENAMICO 500 MG - 01 caixa - Tomar 01 comprimido de 8/8h por até 5 dias"
+      ]
+    },
+    "TOSSE SECA": {
+      "USO ORAL": [
+        "LEVODROPROPIZINA 30 MG/5ML - 01 frasco - Tomar 10 mL de 8/8h por 5 dias"
+      ]
+    },
+
+    // ===== Prescrições transcritas das imagens =====
+    "PRESCRICAO (IMAGEM) 1": {
+      "USO EV / IM": [
+        "BUTILBROMETO DE ESCOPOLAMINA + DIPIRONA 4 MG/ML + 500 MG/ML (AMPOLA) - 01 ampola - 1 AMP + 15 mL AD EV",
+        "PROMETAZINA 50 MG (AMPOLA) - 01 ampola - 1 AMP IM",
+        "SF 0,9% (BOLSA) - 500 mL - 500 mL EV lento"
+      ]
+    },
+    "PRESCRICAO (IMAGEM) 2": {
+      "USO EV / IM": [
+        "DIPIRONA 500 MG/ML (AMPOLA) - 01 ampola - 1 AMP + 8 mL AD EV",
+        "CETOPROFENO 100 MG (FR/AMP) - 01 ampola - 1 AMP IM"
+      ]
+    },
+    "PRESCRICAO (IMAGEM) 3": {
+      "USO EV / VO": [
+        "DEXAMETASONA 8 MG/ML (AMPOLA) - 01 ampola - 1 AMP + 18 mL AD EV",
+        "PARACETAMOL 200 MG/ML (FRASCO) - 01 frasco - 40 gotas VO"
+      ]
+    },
+    "PRESCRICAO (IMAGEM) 4": {
+      "USO EV / VO": [
+        "DIPIRONA 500 MG/ML (AMPOLA) - 01 ampola - 1 AMP + 8 mL AD EV",
+        "ENALAPRIL 20 MG (COMPRIMIDO) - 01 comprimido - 1 CP VO"
+      ]
+    },
+    "PRESCRICAO (IMAGEM) 5": {
+      "USO EV": [
+        "CETOPROFENO 100 MG (FR/AMP) - 01 ampola - 1 AMP + 100 mL SF 0,9% EV"
+      ]
+    },
+    "PRESCRICAO (IMAGEM) 6": {
+      "USO EV": [
+        "SF 0,9% 500 mL (BOLSA) - 01 bolsa - 500 mL EV",
+        "DEXAMETASONA 4 MG/ML (FRASCO) - 01 frasco - 2,5 mL + 7,5 mL AD EV",
+        "DIPIRONA 500 MG/ML (AMPOLA) - 01 ampola - 2 mL + 8 mL AD EV",
+        "BROMOPRIDA 10 MG (AMPOLA) - 01 ampola - 2 mL + 18 mL AD EV"
+      ]
+    },
+
+    // ===== NOVO: Modelos que você enviou (em formato “cards” pesquisável) =====
+    "EXAME FISICO MASCULINO": {
+      "ANAMNESE / AP": [
+        "Paciente refere ____.",
+        "AP: Nega alergias medicamentosas ou demais comorbidades."
+      ],
+      "EXAME FISICO GERAL": [
+        "EF: BEG, hidratado, normocorado, anictérico, acianótico, afebril, eupneico, lúcido e orientado, normocárdico e normotenso.",
+        "PA: __ mmHg | FC: __ bpm | Tax: __ °C | SatO2: __ % em AA | HGT: ___ mg/dL"
+      ],
+      "ACV": [
+        "RCR, sem B3 ou B4, BNF, sem SA."
+      ],
+      "AR": [
+        "MV+ em AHT, sem RA."
+      ],
+      "ABDOME": [
+        "Semigloboso, flácido, RHA+, indolor à palpação superficial ou profunda, DB (-), Murphy (-), Giordano (-), sem VMG ou MP."
+      ],
+      "NEUROLOGICO": [
+        "Glasgow 15, PIFR, força muscular grau V, sem sinais de irritação meníngea, nistagmo ou ataxia."
+      ],
+      "EXTREMIDADES": [
+        "Aquecidas, sem edemas, com pulsos periféricos cheios e simétricos, tempo de reenchimento capilar < 2 seg."
+      ]
+    },
+
+    "EXAME FISICO FEMININO": {
+      "ANAMNESE / AP": [
+        "Paciente refere ____.",
+        "AP: Nega alergias medicamentosas ou demais comorbidades.",
+        "Nega atraso menstrual, gestação ou amamentação."
+      ],
+      "EXAME FISICO GERAL": [
+        "EF: BEG, hidratada, normocorada, anictérica, acianótica, afebril, eupneica, lúcida e orientada, normocárdica e normotensa.",
+        "PA: __ mmHg | FC: __ bpm | Tax: __ °C | SatO2: __ % em AA | HGT: ___ mg/dL"
+      ],
+      "ACV": [
+        "RCR, sem B3 ou B4, BNF, sem SA."
+      ],
+      "AR": [
+        "MV+ em AHT, sem RA."
+      ],
+      "ABDOME": [
+        "Semigloboso, flácido, RHA+, indolor à palpação superficial ou profunda, DB (-), Murphy (-), Giordano (-), sem VMG ou MP."
+      ],
+      "NEUROLOGICO": [
+        "Glasgow 15, PIFR, força muscular grau V, sem sinais de irritação meníngea, nistagmo ou ataxia."
+      ],
+      "EXTREMIDADES": [
+        "Aquecidas, sem edemas, com pulsos periféricos cheios e simétricos, tempo de reenchimento capilar < 2 seg."
+      ]
+    },
+
+    "CONDUTA (MODELO)": {
+      "CONDUTA": [
+        "CD:",
+        "- Prescrevo ____.",
+        "- Alta com orientações médicas e seguimento ambulatorial em PSF.",
+        "- Oriento paciente a retornar em caso de novas queixas ou intercorrências."
+      ]
+    },
+
+    "EXAME FISICO COMPLEMENTAR": {
+      "CAVIDADE ORAL E OROFARINGE": [
+        "Sem evidências de hiperemias, adenomegalias, abaulamentos patológicos, placas ou exsudatos."
+      ],
+      "PESCOCO": [
+        "Traqueia centrada, musculatura tópica, sem alterações cutâneas à inspeção, ausência de massas ou tumorações à palpação."
+      ],
+      "ANOPERINEO": [
+        "Pele e mucosa íntegras, toque retal com esfíncter normotenso, sem tumorações, com fezes em ampola retal, pastosas, sem melena em dedo de luva."
+      ]
+    },
+
+    "OTOSCOPIA (MODELO)": {
+      "OE": [
+        "Meato acústico externo com pele íntegra, sem lesões ou obstruções; MT íntegra, translúcida, sem abaulamentos ou nível hídrico, cone luminoso visível e tópico."
+      ],
+      "OD": [
+        "Meato acústico externo com pele íntegra, sem lesões ou obstruções; MT íntegra, translúcida, sem abaulamentos ou nível hídrico, cone luminoso visível e tópico."
+      ]
+    },
+
+    "REAVALIACAO (MODELO)": {
+      "MASCULINA": [
+        "Paciente evoluiu estável, referindo melhora sintomática após medicação, sem relato de novas queixas ou intercorrências.",
+        "No momento segue em BEG, Glasgow 15 e eupneico em ar ambiente."
+      ],
+      "FEMININA": [
+        "Paciente evoluiu estável, referindo melhora sintomática após medicação, sem relato de novas queixas ou intercorrências.",
+        "No momento segue em BEG, Glasgow 15 e eupneica em ar ambiente."
+      ]
+    },
+
+    "EXAMES COMPLEMENTARES (MODELO)": {
+      "IMAGEM": [
+        "RX DE TÓRAX: Sem evidências de pneumotórax, condensações, DP, fraturas, distopias ou demais alterações patológicas agudas.",
+        "RX DE ABDOME AGUDO: Sem evidências de pneumoperitôneo, distensão de alças intestinais, alças sentinelas ou demais alterações patológicas agudas."
+      ],
+      "CARDIO": [
+        "ECG: Sinusal, dentro dos limites da normalidade.",
+        "Marcadores de necrose miocárdica no intervalo da normalidade."
+      ],
+      "LABORATORIO": [
+        "Hemograma sem sinais de anemia, leucócitos e plaquetas no intervalo da normalidade.",
+        "Função renal preservada.",
+        "Transaminases sem elevação significativa.",
+        "EAS sem alterações dignas de nota.",
+        "Amilase sem elevação significativa.",
+        "PCR sem elevação significativa.",
+        "Bilirrubinas totais e frações sem elevação.",
+        "Eletrólitos no intervalo da normalidade."
+      ]
+    },
+
+    /* =======================
+       NOVO: ARSENAL UTI/URGENCIA
+       ======================= */
+    "MEDICAMENTOS URGENCIA/UTI - ARSENAL ARTUR BATISTA": {
+      "HIDRATACAO": [
+        "SF 0,9% - 500 ML, EV, CORRER ABERTO",
+        "SF 0,9% - 500 ML, EV, 80 GOTAS/MIN",
+        "SG 5% - 500 ML, EV, 80 GOTAS/MIN",
+        "RINGER LACTATO - 500 ML, EV, CORRER ABERTO, ACM"
+      ],
+      "ANALGESICO": [
+        "DIPIRONA 1000 MG/2 ML - 01 AMP + 08 ML AD, EV",
+        "DIPIRONA 1000 MG/2 ML - 01 AMP + 08 ML AD, EV, 6/6H, SE DOR OU TAX >= 37,8 °C",
+        "DIPIRONA 1000 MG/2 ML - 01 AMP, IM",
+        "BUSCOPAN COMPOSTO (4 MG/ML + 500 MG/ML) - 01 AMP + 10 ML AD, EV",
+        "BUSCOPAN COMPOSTO (4 MG/ML + 500 MG/ML) - 01 AMP + 10 ML AD, EV, 8/8H, SN",
+        "BUSCOPAN SIMPLES 20 MG/1 ML - 01 AMP + 19 ML AD, EV LENTO",
+        "BUSCOPAN SIMPLES 20 MG/1 ML - 01 AMP + 19 ML AD, EV LENTO, 8/8H, SN",
+        "TRAMADOL (TRAMAL) 50 MG - 02 AMP + 100 ML SF 0,9%, EV LENTO, 8/8H, ACM",
+        "TRAMADOL (TRAMAL) 100 MG/2 ML - 01 AMP + 100 ML SF 0,9%, EV, 32 GOTAS/MIN",
+        "TRAMADOL (TRAMAL) 100 MG/2 ML - 01 AMP + 100 ML SF 0,9%, EV LENTO, 8/8H, ACM",
+        "MORFINA 10 MG/ML - 01 AMP + 10 ML AD, FAZER 03 ML EV LENTO, ACM",
+        "MORFINA 10 MG/ML - 01 AMP + 10 ML AD, FAZER 03 ML EV LENTO, 8/8H, ACM"
+      ],
+      "ANTAGONISTA OPIOIDE (MORFINA)": [
+        "NALOXONA (NARCAN) 0,4 MG/ML - 01 AMPOLA, IM"
+      ],
+      "ANTI-INFLAMATORIO": [
+        "DICLOFENACO SODICO (VOLTAREN) 75 MG/3 ML - 01 AMP, IM",
+        "TENOXICAM (TILATIL) 20 MG/ML - 01 AMP + 20 ML AD, EV",
+        "CETOPROFENO (PROFENID) 100 MG/2 ML - 01 AMP + 100 ML SF 0,9%, EV, 40 GOTAS/MIN"
+      ],
+      "CORTICOIDE": [
+        "DEXAMETASONA (DECADRON) 10 MG/2,5 ML - 01 AMP + 10 ML AD, EV",
+        "DEXAMETASONA (DECADRON) 10 MG/2,5 ML - 01 AMP + 10 ML AD, EV, 12/12H",
+        "DEXAMETASONA (DECADRON) 10 MG/2,5 ML - 01 AMP, IM",
+        "HIDROCORTISONA 500 MG - 01 AMP + 10 ML AD, EV",
+        "HIDROCORTISONA 100 MG - 01 AMP + 10 ML AD, EV",
+        "HIDROCORTISONA 100 MG - 01 AMP + 10 ML AD, EV, 12/12H"
+      ],
+      "ANTI-EMETICO": [
+        "PLASIL 5 MG/ML - 01 AMP, IM",
+        "BROMOPRIDA 10 MG/2 ML - 01 AMP + 18 ML AD, EV",
+        "BROMOPRIDA 10 MG/2 ML - 01 AMP + 18 ML AD, EV, 8/8H, SE NAUSEAS/VOMITOS",
+        "BROMOPRIDA 10 MG/2 ML - 01 AMP, IM",
+        "ONDASETRONA (NAUSEDRON) 8 MG/4 ML - 01 AMP + AD, EV",
+        "ONDASETRONA (NAUSEDRON) 8 MG/4 ML - 01 AMP + 100 ML SF 0,9%, EV LENTO, 8/8H, SN",
+        "DIMENIDRATO 30 MG + PIRIDOXINA 50 MG + GLICOSE 1000 MG + FRUTOSE 1000 MG - 01 AMP + 100 ML SF 0,9%, EV, 8/8H"
+      ],
+      "ANTI-HISTAMINICO": [
+        "PROMETAZINA (FENERGAM) 50 MG/2 ML - 01 AMP, IM"
+      ],
+      "ANEMIA": [
+        "NORIPURUM 100 MG/5 ML - 01 AMP + SF 0,9% 100 ML, EV, CORRER EM 30 MIN",
+        "NORIPURUM 100 MG/5 ML - 01 AMP + SF 0,9% 250 ML, EV, CORRER EM 1 H, 1X/DIA"
+      ],
+      "ANTI-HIPERTENSIVO": [
+        "HIDRALAZINA 20 MG/ML - 01 AMP + 10 ML AD, FAZER 2,5 ML EV, AGORA",
+        "METOPROLOL (SELOKEN) 1 MG/ML - 01 AMP + AD, EV OU EM BOLUS",
+        "METOPROLOL (SELOKEN) 1 MG/ML - 01 AMP, EV, EM BOLUS",
+        "FUROSEMIDA 20 MG/2 ML - 01 AMP + 10 ML AD, EV",
+        "FUROSEMIDA 20 MG/2 ML - 01 AMP + 10 ML AD, EV, 8/8H",
+        "CLONIDINA 150 MCG/ML - 1 ML + 9 ML AD, EV LENTO, SE PAS >= 160 MMHG OU PAD >= 110 MMHG"
+      ],
+      "ANTI-HIPERTENSIVO EM BIC (VASODILATADOR)": [
+        "NITROPRUSSIATO DE SODIO (NIPRIDE) 50 MG/2 ML - 01 AMP + 248 ML SG 5%, EV, BIC, ACM (MEDIA 15 ML/H) (AVCH)",
+        "NITROGLICERINA (TRIDIL) 25 MG/5 ML - 01 AMP + 245 ML SG 5% OU SF 0,9%, EV, BIC, ACM (INICIAR 3 ML/H ATE 60 ML/H) (IAM)"
+      ],
+      "PROTETOR GASTRICO": [
+        "RANITIDINA 50 MG/2 ML - 01 AMP + 18 ML AD, EV",
+        "RANITIDINA 50 MG/2 ML - 01 AMP + 18 ML AD, EV, 8/8H",
+        "CIMETIDINA 150 MG/ML - 01 AMP + 18 ML AD, EV, 12/12H",
+        "OMEPRAZOL 40 MG - 01 FR + 10 ML AD, EV",
+        "OMEPRAZOL 40 MG - 01 FR + 10 ML AD, EV, 24/24H",
+        "(HDA) OMEPRAZOL 40 MG - 02 AMP + 10 ML AD, EV, AGORA; DEPOIS OMEPRAZOL 40 MG - 01 AMP + 10 ML AD, EV, 12/12H",
+        "OMEPRAZOL 40 MG/FR - 01 FR + 10 ML DILUENTE PROPRIO, EV, AS 6H",
+        "OMEPRAZOL EM HDA (ATAQUE) - 100 ML SF 0,9% + 02 AMP (80 MG), EV, 80 GOTAS/MIN",
+        "OMEPRAZOL EM HDA (INFUSAO CONTINUA) - 100 ML SF 0,9% + 02 AMP (80 MG), EV, BOMBA 10 ML/H",
+        "HIDROXIDO DE ALUMINIO - 10 ML, VO, AGORA"
+      ],
+      "NEBULIZACAO": [
+        "NBZ: 5 ML SF 0,9% + 30 GTS IPRATROPIO (ATROVENT) + 10 GTS FENOTEROL (BEROTEC) POR 15 MIN, REPETIR 3X",
+        "NBZ 6/6H: 5 ML SF 0,9% + 30 GTS IPRATROPIO (ATROVENT) + 10 GTS FENOTEROL (BEROTEC) POR 15 MIN"
+      ],
+      "ANTICONVULSIVANTE": [
+        "DIAZEPAM 10 MG/2 ML - 01 AMP + 10 ML AD, EV LENTO, ACM",
+        "DIAZEPAM 10 MG/2 ML - 01 AMP, IM",
+        "FENITOINA (HIDANTAL) 250 MG/5 ML (ATAQUE): 02 AMP EM 200 ML SF 0,9%, EV, 20 MIN",
+        "FENITOINA (HIDANTAL) 250 MG/5 ML (MANUTENCAO): 02 AMP EM 200 ML SF 0,9%, EV, 4 H (16 GOTAS/MIN)",
+        "FENITOINA (HIDANTAL) 250 MG/5 ML - 02 ML + 18 ML AD, EV, 8/8H",
+        "FENITOINA (HIDANTAL) 250 MG/5 ML - 02 ML + 18 ML AD, EV LENTO, 12/12H",
+        "FENITOINA (HIDANTAL) 250 MG/5 ML - 04 AMP + 250 ML SF 0,9%, EV, 2 H",
+        "FENOBARBITAL (GARDENAL) 200 MG/2 ML - 01 AMP, IM"
+      ],
+      "ANTAGONISTA BENZODIAZEPINICO (DIAZEPAM)": [
+        "FLUMAZENIL (LANEXAT) 0,5 MG/5 ML - 01 AMP + 15 ML SG 5%, EV, 04 ML/MIN ATE MAX 02 AMP"
+      ],
+      "ANTIBIOTICO": [
+        "AMPICILINA + SULBACTAM (UNASYN) 3 G + 100 ML SF 0,9%, EV, 8/8H",
+        "AZITROMICINA 500 MG + 100 ML SF 0,9%, EV, 24/24H",
+        "CEFALOTINA 1 G + 10 ML AD, EV, 6/6H",
+        "CEFEPIME 1 G + 100 ML SF 0,9%, EV, 8/8H",
+        "CEFEPIME 2 G + 100 ML SF 0,9%, EV, 8/8H",
+        "CEFOXITINA 2 G + 10 ML AD, EV, 6/6H",
+        "CEFTAZIDIMA 2 G + 100 ML SF 0,9%, EV, 8/8H",
+        "CEFTRIAXONA 1 G + 10 ML AD, EV, 12/12H",
+        "METRONIDAZOL 500 MG/100 ML - 01 BOLSA, EV, 8/8H",
+        "TAZOCIN 4,5 G + 100 ML SF 0,9%, EV, 8/8H OU 6/6H",
+        "VANCOMICINA 1 G + 100 ML SF 0,9%, EV, 12/12H"
+      ],
+      "TROMBOPROFILAXIA / ANTICOAGULACAO": [
+        "CLEXANE 40 MG - 01 AMP, SC, 24/24H",
+        "CLEXANE 60 MG - SC, 12/12H",
+        "HEPARINA 5000 UI/0,25 ML - 01 AMP, SC, 8/8H",
+        "HEPARINA 5000 UI/0,25 ML - 01 AMP, SC, 12/12H"
+      ],
+      "HEMORRAGIA": [
+        "ACIDO TRANEXAMICO 250 MG/5 ML - 02 AMP + 250 ML SF 0,9%, EV LENTO",
+        "ACIDO TRANEXAMICO 250 MG/5 ML - 01 AMP + 100 ML SF 0,9%, EV LENTO, 8/8H",
+        "VITAMINA K 10 MG/ML - 01 AMP, IM, 24/24H"
+      ],
+      "ACIDEMIA / DISTURBIOS ELETROLITICOS": [
+        "BICARBONATO DE SODIO 8,4% - 60 ML + SF 0,9% 100 ML, EV, 12/12H, ACM",
+        "BICARBONATO DE SODIO 8,4% - 250 ML, EV, ACM",
+        "BICARBONATO DE SODIO 8,4% - 01 AMP, EV, ACM",
+        "BICARBONATO DE SODIO 8,4% - 70 ML + 70 ML SF 0,9%, EV, BIC, 50 ML/H",
+        "GLUCONATO DE CALCIO 10% - 30 ML + 70 ML SF 0,9%, EV, BIC, 50 ML/H (HIPERCALEMIA)",
+        "INSULINA REGULAR 10 UI + SG 50% 50 ML, EV, BIC, 50 ML/H, 6/6H (HIPERCALEMIA)",
+        "KCL 10% - 40 ML + 460 ML SRL, EV, BIC, 100 ML/H (HIPOCALEMIA)",
+        "HIPERNATREMIA: SF 0,9% 250 ML + AD 250 ML (2 ETAPAS 500 ML), EV, BIC, 42 ML/H"
+      ],
+      "HEMODERIVADOS": [
+        "CH (02 BOLSAS) - EV, CORRER 01–02 H CADA BOLSA",
+        "CH (01 BOLSA) - EV, GOTA A GOTA",
+        "CP 08 UI - EV, EM 30 MIN (20–30 ML/KG/H)",
+        "PLASMA FRESCO 01 UNIDADE - EV, GOTA A GOTA",
+        "MEDIR TAX E PA A CADA 30 MIN DURANTE TRANSFUSAO"
+      ],
+      "DM DESCOMPENSADO": [
+        "INSULINA REGULAR SC (SLIDING SCALE): <180=0 UI; 181–200=2 UI; 201–250=4 UI; 251–300=6 UI; 301–350=8 UI; >350=10 UI",
+        "GLICOSE 50% - 40 ML EV SE GLICEMIA <70 MG/DL",
+        "MEDIR GLICEMIA CAPILAR 6/6H",
+        "INSULINA NPH SC: 10 UI MANHA + 05 UI NOITE",
+        "INSULINA REGULAR 100 UI + 100 ML SF 0,9% - EV, BIC 6 ML/H; MEDIR GLICEMIA 1/1H"
+      ],
+      "DROGAS VASOATIVAS": [
+        "ADRENALINA 1 MG/ML - 0,5 ML IM NO VASTO LATERAL DA COXA",
+        "NORADRENALINA 4 MG - 04 AMP + 234 ML SF 0,9%, EV, BIC, ACM",
+        "DOPAMINA 50 MG/10 ML - 05 AMP + 200 ML SF 0,9%, EV, BIC, ACM (20–100 ML/H)",
+        "DOBUTAMINA 250 MG/20 ML - 01 AMP + 230 ML SF 0,9%, EV, BIC, ACM"
+      ],
+      "SEDACAO / BLOQUEIO NEUROMUSCULAR (BIC)": [
+        "FENTANIL 0,05 MG/ML - 50 ML + 50 ML SF 0,9%, EV, BIC, 5 ML/H",
+        "MIDAZOLAM 15 MG/3 ML - 20 ML + 80 ML SF 0,9%, EV, BIC, 5 ML/H",
+        "CISATRACURIO 2 MG/ML - 50 ML + 50 ML SF 0,9%, EV, BIC, 5 ML/H",
+        "PRECEDEX (DEXMEDETOMIDINA) 100 MCG/ML - 02 ML + 48 ML SF 0,9%, EV, BIC, 01 ML/H, ACM"
+      ],
+      "SOLICITACOES / ENCAMINHAMENTOS": [
+        "SOLICITO EXAMES LABORATORIAIS",
+        "SOLICITO INTERNACAO HOSPITALAR",
+        "ENCAMINHO PACIENTE PARA SALA AMARELA",
+        "ENCAMINHO PACIENTE PARA SALA VERMELHA"
+      ],
+      "CURATIVOS / PROFILAXIAS": [
+        "CURATIVO DIARIO COM COLAGENASE E AGE",
+        "O2 SOB MASCARA DE VENTURI 5 L/MIN, SE SATO2 <92%",
+        "SORO ANTIRRABICO - 5 ML NO LOCAL DA FERIDA + 5 ML IM NO GLUTEO",
+        "VACINA ANTIRRABICA - 01 AMP IM"
+      ],
+      "DIETA": [
+        "DIETA ORAL ZERO",
+        "DIETA ORAL LIVRE",
+        "DIETA ORAL BRANDA",
+        "DIETA ORAL P/ HAS",
+        "DIETA ORAL P/ DM",
+        "DIETA ORAL P/ HEPATOPATA",
+        "DIETA ORAL P/ NEFROPATA",
+        "DIETA ORAL CONSTIPANTE",
+        "DIETA ORAL LAXANTE",
+        "DIETA ORAL SEM IRRITANTES GASTRICOS",
+        "DIETA VIA SNE: ISOSOURCE 1,5 KCAL/ML - 500 ML, BIC, 30 ML/H",
+        "DIETA ENTERAL: CUBISON 1,0 KCAL - 1000 ML, SNE, BIC, 52 ML/H",
+        "DIETA ENTERAL: OSMOLITE PLUS 1,2 KCAL - 900 ML, SNE, BIC, 50 ML/H",
+        "DIETA NPT: KABIVEN 1900 KCAL - 2053 ML, EV, BIC, 52 ML/H, 23/24H"
+      ]
+    },
+
+    "MEDICACOES URGENCIA VIA ORAL - ARSENAL": {
+      "ANTI-HIPERTENSIVO / CARDIO (VO/SL/SNG)": [
+        "ANLODIPINO 5 MG - TOMAR 01 CP, VO, AGORA",
+        "ATENOLOL 25 MG - TOMAR 01 CP, VO, AGORA",
+        "ATENOLOL 50 MG - TOMAR 01 CP, VO, AGORA",
+        "CAPTOPRIL 25 MG - TOMAR 01 CP, VO, AGORA",
+        "CARVEDILOL 3,125 MG - 01 CP, VO, 12/12H",
+        "CARVEDILOL 6,25 MG - 01 CP, VO, 12/12H",
+        "CARVEDILOL 12,5 MG - 01 CP, VO, 12/12H",
+        "CARVEDILOL 25 MG - 01 CP, VO, 24/24H OU 12/12H",
+        "ENALAPRIL 5 MG - TOMAR 01 CP, VO, AGORA",
+        "ENALAPRIL 10 MG - TOMAR 01 CP, VO, AGORA",
+        "FUROSEMIDA 40 MG - TOMAR 01 CP, VO, AGORA",
+        "HIDRALAZINA 50 MG - 01 CP, VO, 12/12H",
+        "HIDROCLOROTIAZIDA 25 MG - TOMAR 01 CP, VO, AGORA",
+        "NIFEDIPINO 20 MG - TOMAR 01 CP, VO, AGORA",
+        "NIFEDIPINO 20 MG - TOMAR 01 CP, VO, SE PAS >= 160 MMHG E/OU PAD >= 100 MMHG",
+        "NIMODIPINA 30 MG - 02 CP, SNG, 4/4H (AVCH)",
+        "METOPROLOL 50 MG - TOMAR 01 CP, VO, AGORA",
+        "PROPRANOLOL 40 MG - TOMAR 01 CP, VO, AGORA",
+        "NITRATO DE ISOSSORBIDA (ISORDIL) 5 MG - TOMAR 01 CP, SL, AGORA",
+        "AAS 100 MG - TOMAR 02 CP, VO, MASTIGADOS",
+        "CLOPIDOGREL 75 MG - TOMAR 04 CP, VO",
+        "SINVASTATINA 40 MG - TOMAR 01 CP, VO, AGORA"
+      ],
+      "ANALGESICO (VO)": [
+        "PARACETAMOL 500 MG - 01 CP, VO, AGORA",
+        "PARACETAMOL - 40 GOTAS, VO, AGORA",
+        "DIPIRONA 500 MG - 01 CP, VO, AGORA",
+        "DIPIRONA - 40 GOTAS, VO, AGORA",
+        "BUSCOPAN COMPOSTO - 40 GOTAS, VO, AGORA"
+      ],
+      "ANSIOLITICO": [
+        "DIAZEPAM 5 MG - TOMAR 01 CP, VO",
+        "DIAZEPAM 10 MG - TOMAR 01 CP, VO",
+        "CLONAZEPAM 2 MG - TOMAR 01 CP, VO",
+        "QUETIAPINA 25 MG - 01 CP, VO, ACM"
+      ],
+      "ANTI-ARRITMICO (VO)": [
+        "AMIODARONA 100 MG - 01 CP, VO, 12/12H",
+        "AMIODARONA 200 MG - 01 CP, VO, 1X/DIA"
+      ],
+      "ANTIBIOTICO": [
+        "PENICILINA G BENZATINA (BENZETACIL) - 1.200.000 UI, IM, REGIAO GLUTEA"
+      ],
+      "ANTI-FISETICO": [
+        "SIMETICONA (LUFTAL) 75 MG/ML - 40 GOTAS, VO, 8/8H"
+      ],
+      "ANTI-HISTAMINICO": [
+        "HISTAMIN - TOMAR 10 ML, VO, AGORA",
+        "LORATADINA 10 MG - 01 CP, VO, 1X/DIA POR 7 DIAS",
+        "DEXCLORFENIRAMINA 2 MG - 01 CP, VO, 8/8H POR 5 DIAS",
+        "HIDROXIZINA 25 MG - 01 CP, VO, 12/12H POR 5 DIAS"
+      ],
+      "ANTI-HELMINTICO": [
+        "ALBENDAZOL 400 MG - 01 CP, VO, 24/24H"
+      ],
+      "ANTIVERTIGINOSO": [
+        "CINARIZINA 25 MG - TOMAR 01 CP, VO, AGORA",
+        "CINARIZINA 25 MG - 01 CP, VO, A NOITE",
+        "BETAISTINA 24 MG - 01 CP, VO, 12/12H"
+      ],
+      "PROTETOR GASTRICO": [
+        "HIDROXIDO DE ALUMINIO - TOMAR 10 ML, VO, AGORA",
+        "OMEPRAZOL 20 OU 40 MG - 01 CP, VO, EM JEJUM, 1X/DIA",
+        "RANITIDINA 150 MG - 01 CP, VO, 8/8H",
+        "PANTOPRAZOL 20 OU 40 MG - 01 CP, VO, EM JEJUM, 1X/DIA"
+      ],
+      "LAVAGEM GASTRICA": [
+        "SNG N° 18–22 + 6 A 10 L SF 0,9% (250 ML/VEZ) ATE RETORNO LIMPIDO; ATE 2H APOS INGESTAO"
+      ],
+      "CONSTIPACAO / ENEMAS": [
+        "OLEO MINERAL - 30 ML, VO, AGORA",
+        "LACTULONA XAROPE - 10 ML, VO, AGORA",
+        "SOLUCAO GLICERINADA (CLISTER) - 500 ML, VIA RETAL, ACM",
+        "FLEET ENEMA - 01 UNIDADE, VIA RETAL",
+        "ENEMA GLICERINA 12% - 250 ML/VEZ, VIA RETAL; REPETIR EM 30 MIN SE NAO EVACUAR"
+      ],
+      "PRESCRICOES AMBULATORIAIS (EXEMPLOS)": [
+        "PARACETAMOL 500 MG - 20 CP - 01 CP VO 6/6H SE FEBRE/DOR",
+        "DIPIRONA 500 MG - 20 CP - 01 CP VO 6/6H SE FEBRE/DOR",
+        "BUSCOPAN COMPOSTO - 01 FRASCO - 40 GOTAS VO 8/8H SE DOR/FEBRE",
+        "TRAMAL 50 MG - 21 CP - 01 CP VO 8/8H",
+        "BROMOPRIDA 10 MG - 12 CP - 01 CP VO 8/8H SE NAUSEAS/VOMITOS",
+        "VONAU 8 MG - 10 CP - 01 CP VO 12/12H SE NAUSEAS/VOMITOS",
+        "DRAMIN 100 MG - 20 CP - 01 CP VO 6/6H SE NAUSEAS/VOMITOS/TONTURA",
+        "SRO - 10 ENVELOPES - DILUIR 01 ENVELOPE EM 01 L AGUA E BEBER A VONTADE",
+        "FLORATIL 200 MG - 06 CAPS - 01 CAPS VO 12/12H",
+        "AZITROMICINA 500 MG - 05 CP - 01 CP VO 1X/DIA POR 5 DIAS",
+        "AMOX/CLAV 875/125 MG - 14 CP - 01 CP VO 12/12H POR 7 DIAS",
+        "CEFALEXINA 500 MG - 28 CP - 01 CP VO 6/6H POR 7 DIAS",
+        "CIPROFLOXACINO 500 MG - 14 CP - 01 CP VO 12/12H POR 7 DIAS",
+        "LEVOFLOXACINO 500 MG - 07 CP - 01 CP VO 1X/DIA POR 7 DIAS",
+        "SEKI XAROPE - 10 ML VO 8/8H SE TOSSE PERSISTENTE",
+        "ACEBROFILINA 50 MG/5 ML - 10 ML VO 12/12H POR 7 DIAS",
+        "AMBROXOL XAROPE - 10 ML VO 8/8H POR 7 DIAS",
+        "ELOTIN GOTAS - 03 GOTAS OUVIDO AFETADO 8/8H POR 7 DIAS",
+        "CLOREXIDINA 0,12% - BOCHECHAR 10 ML A CADA 6/6H"
+      ]
+    }
+  };
+
+  const elCondicao = document.getElementById("condicao");
+  const elBusca = document.getElementById("busca");
+  const elConteudo = document.getElementById("conteudo");
+  const elJsonBox = document.getElementById("jsonBox");
+  const btnCopiar = document.getElementById("btnCopiar");
+  const btnMostrarJson = document.getElementById("btnMostrarJson");
+
+  function normalize(s){
+    return (s || "")
+      .toString()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .toLowerCase();
+  }
+
+  function render(){
+    const key = elCondicao.value;
+    const q = normalize(elBusca.value);
+
+    elConteudo.innerHTML = "";
+    if(!key || !RX[key]){
+      elConteudo.innerHTML = `<div class="card"><div class="title">Selecione uma condição</div><div class="muted">Escolha uma condição no menu acima para visualizar as prescrições.</div></div>`;
+      return;
+    }
+
+    const block = RX[key];
+
+    Object.entries(block).forEach(([via, items]) => {
+      const filtered = items.filter(x => normalize(x).includes(q));
+      if(q && filtered.length === 0) return;
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="title">${key}</div>
+        <div class="badge">${via}</div>
+        <ul>${(q ? filtered : items).map(it => `<li>${it}</li>`).join("")}</ul>
+      `;
+      elConteudo.appendChild(card);
+    });
+
+    if(elConteudo.children.length === 0){
+      elConteudo.innerHTML = `<div class="card"><div class="title">${key}</div><div class="muted">Nenhum item encontrado para a busca atual.</div></div>`;
+    }
+  }
+
+  function buildTextToCopy(){
+    const key = elCondicao.value;
+    if(!key || !RX[key]) return "";
+    const q = normalize(elBusca.value);
+    let out = `CONDICAO: ${key}\n\n`;
+    const block = RX[key];
+
+    for(const [via, items] of Object.entries(block)){
+      const filtered = items.filter(x => normalize(x).includes(q));
+      if(q && filtered.length === 0) continue;
+      out += `${via}:\n`;
+      (q ? filtered : items).forEach(i => out += `- ${i}\n`);
+      out += "\n";
+    }
+    return out.trim();
+  }
+
+  elCondicao.addEventListener("change", render);
+  elBusca.addEventListener("input", render);
+
+  btnCopiar.addEventListener("click", async () => {
+    const txt = buildTextToCopy();
+    if(!txt){ alert("Selecione uma condição antes de copiar."); return; }
+    try{
+      await navigator.clipboard.writeText(txt);
+      alert("Conteúdo copiado.");
+    } catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = txt; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy");
+      document.body.removeChild(ta);
+      alert("Conteúdo copiado.");
+    }
+  });
+
+  btnMostrarJson.addEventListener("click", () => {
+    if(elJsonBox.style.display === "block"){
+      elJsonBox.style.display = "none";
+      return;
+    }
+    elJsonBox.textContent = JSON.stringify(RX, null, 2);
+    elJsonBox.style.display = "block";
+  });
+
+  render();
+</script>
+
+</body>
+</html>

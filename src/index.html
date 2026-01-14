@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SisEd - Login</title>
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="../assets/styles/style.css">
+    <link rel="stylesheet" href="../assets/styles/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Estilos específicos para a página de login */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e3a8a;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="auth-container">
+    
+    <div class="auth-box">
+        <!-- Logo -->
+        <div class="auth-logo">
+            <img src="../assets/images/LOGOMA.jpg" alt="SisEd Logo">
+            <h1>SisEd</h1>
+            <p>Sistema de Prescrição Médica</p>
+        </div>
+        
+        <!-- Mensagens de erro/sucesso -->
+        <div id="authMessage" class="auth-message error" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="messageText">Mensagem de erro</span>
+        </div>
+        
+        <!-- Formulário de login -->
+        <form id="loginForm" class="auth-form">
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-user"></i> Usuário
+                </label>
+                <div class="input-group">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" 
+                           id="username" 
+                           class="form-control" 
+                           placeholder="Digite seu usuário" 
+                           required
+                           autocomplete="username">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-lock"></i> Senha
+                </label>
+                <div class="input-group">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" 
+                           id="password" 
+                           class="form-control" 
+                           placeholder="Digite sua senha" 
+                           required
+                           autocomplete="current-password">
+                    <button type="button" 
+                            class="toggle-password" 
+                            onclick="togglePasswordVisibility()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Checkbox lembrar-me -->
+            <label class="auth-checkbox">
+                <input type="checkbox" id="rememberMe">
+                <span class="checkmark"></span>
+                <span>Lembrar-me neste computador</span>
+            </label>
+            
+            <!-- Botão de login -->
+            <button type="submit" class="auth-submit" id="loginButton">
+                <i class="fas fa-sign-in-alt"></i>
+                Entrar no Sistema
+            </button>
+        </form>
+        
+        <!-- Links adicionais -->
+        <div class="auth-links">
+            <a href="#" onclick="showRecovery()">
+                <i class="fas fa-key"></i> Esqueci minha senha
+            </a>
+            <a href="#" onclick="showSupport()">
+                <i class="fas fa-question-circle"></i> Ajuda
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <div class="auth-footer">
+            <p>© 2024 SisEd - Sistema de Prescrição Médica</p>
+            <p>Versão 1.0.0 • Desenvolvido para uso médico</p>
+        </div>
+    </div>
+    
+    <!-- Versão -->
+    <div class="auth-version">v1.0.0</div>
+    
+    <!-- Scripts -->
+    <script>
+        // Função para mostrar/ocultar senha
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('password');
+            const toggleButton = document.querySelector('.toggle-password i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleButton.className = 'fas fa-eye-slash';
+            } else {
+                passwordField.type = 'password';
+                toggleButton.className = 'fas fa-eye';
+            }
+        }
+        
+        // Função para mostrar mensagens
+        function showMessage(text, type = 'error') {
+            const messageDiv = document.getElementById('authMessage');
+            const messageText = document.getElementById('messageText');
+            
+            messageDiv.className = `auth-message ${type}`;
+            messageText.textContent = text;
+            messageDiv.style.display = 'flex';
+            
+            // Auto-esconder após 5 segundos
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            // Validar campos
+            if (!username || !password) {
+                showMessage('Preencha todos os campos!', 'error');
+                return;
+            }
+            
+            // Mostrar loading
+            const loginBtn = document.getElementById('loginButton');
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+            
+            // Simular autenticação (substituir por API real)
+            setTimeout(() => {
+                // Usuários de teste
+                const usuariosValidos = [
+                    { usuario: 'medico', senha: '123456', nome: 'Dr. João Silva', nivel: 'medico' },
+                    { usuario: 'enfermeiro', senha: '123456', nome: 'Enf. Maria Santos', nivel: 'enfermeiro' },
+                    { usuario: 'admin', senha: 'admin123', nome: 'Administrador', nivel: 'admin' }
+                ];
+                
+                const usuarioValido = usuariosValidos.find(u => 
+                    u.usuario === username && u.senha === password
+                );
+                
+                if (usuarioValido) {
+                    // Salvar sessão
+                    const usuarioData = {
+                        nome: usuarioValido.nome,
+                        usuario: usuarioValido.usuario,
+                        nivel: usuarioValido.nivel,
+                        dataLogin: new Date().toISOString()
+                    };
+                    
+                    if (rememberMe) {
+                        localStorage.setItem('sismed_usuario', JSON.stringify(usuarioData));
+                    } else {
+                        sessionStorage.setItem('sismed_usuario', JSON.stringify(usuarioData));
+                    }
+                    
+                    // Redirecionar
+                    window.location.href = './rotina.html';
+                } else {
+                    showMessage('Usuário ou senha incorretos!', 'error');
+                    loginBtn.classList.remove('loading');
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no Sistema';
+                }
+            }, 1500);
+        });
+        
+        // Funções auxiliares
+        function showRecovery() {
+            showMessage('Entre em contato com o administrador do sistema.', 'info');
+        }
+        
+        function showSupport() {
+            showMessage('Suporte: suporte@sismed.example.com | (11) 99999-9999', 'info');
+        }
+        
+        // Auto-focus no campo de usuário
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').focus();
+            
+            // Preencher automaticamente para teste (remover em produção)
+            document.getElementById('username').value = 'medico';
+            document.getElementById('password').value = '123456';
+        });
+    </script>
+</body>
+</html>

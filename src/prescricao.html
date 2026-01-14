@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Consulta Rápida – Plantão</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#111a2e;
+      --muted:#92a4c6;
+      --text:#e9eefc;
+      --accent:#6ea8ff;
+      --border:rgba(255,255,255,.10);
+      --chip:rgba(110,168,255,.14);
+      --good:#9be7c4;
+      --warn:#ffd36e;
+      --bad:#ff8d8d;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 10% 0%, rgba(110,168,255,.22), transparent 55%),
+                  radial-gradient(1000px 500px at 90% 10%, rgba(155,231,196,.14), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:18px 18px 10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(17,26,46,.55);
+      backdrop-filter: blur(10px);
+      position:sticky; top:0; z-index:10;
+    }
+    .wrap{max-width:1100px;margin:0 auto}
+    h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
+    .sub{margin-top:6px;color:var(--muted);font-size:12px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      padding:14px 18px 24px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: rgba(17,26,46,.72);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    select,input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      outline:none;
+    }
+    .row{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: var(--chip);
+      border:1px solid rgba(110,168,255,.25);
+      color: #cfe0ff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:hover{filter:brightness(1.1)}
+    .title{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin-bottom:10px;
+    }
+    .title h2{margin:0;font-size:14px}
+    .btns{display:flex;gap:8px;flex-wrap:wrap}
+    button{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    button:hover{filter:brightness(1.15)}
+    .section{
+      margin-top:10px;
+      border-top:1px dashed rgba(255,255,255,.10);
+      padding-top:10px;
+    }
+    .section h3{
+      margin:0 0 8px;
+      font-size:12px;
+      color:#cfe0ff;
+      letter-spacing:.2px;
+      text-transform:uppercase;
+    }
+    .box{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
+    }
+    .box h4{margin:0 0 8px;font-size:12px;color:var(--muted)}
+    ul{margin:0;padding-left:18px}
+    li{margin:6px 0; line-height:1.25rem}
+    .muted{color:var(--muted)}
+    .tag{
+      display:inline-block;
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      margin-left:8px;
+    }
+    .note{
+      font-size:12px;
+      color: var(--muted);
+      line-height: 1.25rem;
+    }
+    .kpi{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px
+    }
+    .kpi .pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .pill strong{color:var(--text);font-weight:650}
+    .warn{color:var(--warn)}
+    .bad{color:var(--bad)}
+    .good{color:var(--good)}
+    .foot{
+      margin-top:12px;
+      font-size:11px;
+      color:var(--muted);
+      opacity:.9;
+    }
+    pre{
+      white-space:pre-wrap;
+      word-break:break-word;
+      margin:0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      line-height:1.25rem;
+      color: #e9eefc;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Consulta Rápida – Plantão</h1>
+    <div class="sub">Selecione a condição para ver Bizu, Condutas e Receitas por via. (Base: seus modelos + PSZerado)</div>
+  </div>
+</header>
+
+<div class="wrap grid">
+  <!-- Coluna esquerda -->
+  <section class="card">
+    <div class="row">
+      <div>
+        <label for="conditionSelect">Condição</label>
+        <select id="conditionSelect">
+          <option value="">Selecione uma condição</option>
+
+          <!-- Lista do seu select -->
+          <option value="LOMBALGIA">LOMBALGIA</option>
+          <option value="DOR AGUDA">DOR AGUDA</option>
+          <option value="AFTAS">AFTAS</option>
+          <option value="ALERGIA">ALERGIA</option>
+          <option value="ANEMIA MODERADA">ANEMIA MODERADA</option>
+          <option value="CONJUNTIVITE">CONJUNTIVITE</option>
+          <option value="CONSTIPAÇÃO">CONSTIPAÇÃO</option>
+          <option value="CRISE HEMORROIDA">CRISE HEMORROIDA</option>
+          <option value="DIARREIA">DIARREIA</option>
+          <option value="DIARREIA INFECCIOSA">DIARREIA INFECCIOSA</option>
+          <option value="DOR ABDOMINAL">DOR ABDOMINAL</option>
+          <option value="DOR NA GARGANTA">DOR NA GARGANTA</option>
+          <option value="EDEMA">EDEMA</option>
+          <option value="GASTRITE">GASTRITE</option>
+          <option value="GONORREIA 1">GONORREIA 1</option>
+          <option value="GONORREIA 2">GONORREIA 2</option>
+          <option value="GRIPE GESTANTE">GRIPE GESTANTE</option>
+          <option value="GRIPE UBS">GRIPE UBS</option>
+          <option value="INFECÇÃO PARTES MOLES">INFECÇÃO PARTES MOLES</option>
+          <option value="INFECÇÃO TGI">INFECÇÃO TGI</option>
+          <option value="ITU">ITU</option>
+          <option value="ITU NORFLOXACINO">ITU NORFLOXACINO</option>
+          <option value="LESÃO DE PELE">LESÃO DE PELE</option>
+          <option value="METRORRAGIA">METRORRAGIA</option>
+          <option value="ORDEOLO">ORDEOLO</option>
+          <option value="OTALGIA">OTALGIA</option>
+          <option value="OTALGIA INFECCIOSA">OTALGIA INFECCIOSA</option>
+          <option value="PARALISIA FACIAL">PARALISIA FACIAL</option>
+          <option value="PNEUMONIA E AMIGDALITE">PNEUMONIA E AMIGDALITE</option>
+          <option value="PNEUMONIA ALERGIA PENICILINA">PNEUMONIA ALERGIA PENICILINA</option>
+          <option value="SÍNDROME GRIPAL">SÍNDROME GRIPAL</option>
+          <option value="SUTURA">SUTURA</option>
+          <option value="VAGINOSE">VAGINOSE</option>
+          <option value="VITAMINA">VITAMINA</option>
+          <option value="VPPB">VPPB (Vertigem Posicional Paroxística Benigna)</option>
+
+          <!-- Extras do PSZerado (exemplos) -->
+          <option value="URETEROLITIASE">URETEROLITÍASE (CÓLICA NEFRÉTICA)</option>
+          <option value="LOMBALGIA_TORCICOLO_PSZ">LOMBALGIA MECÂNICA / TORCICOLO (PSZerado)</option>
+          <option value="FA_FLUTTER">FIBRILAÇÃO ATRIAL / FLUTTER</option>
+          <option value="ANAFILAXIA_CHOQUE">CHOQUE ANAFILÁTICO / ANAFILAXIA</option>
+          <option value="SEDACAO_POS_IOT">SEDAÇÃO PÓS-IOT</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="searchInput">Busca rápida (texto)</label>
+        <input id="searchInput" placeholder="Ex.: dipirona, SF 0,9, ondansetrona..." />
+      </div>
+    </div>
+
+    <div class="chips" id="quickChips"></div>
+
+    <div class="kpi">
+      <div class="pill"><strong>Dipirona padrão:</strong> 1 g / 2 mL (ampola)</div>
+      <div class="pill"><strong>Modo:</strong> Bizu + Conduta + Receita por via</div>
+    </div>
+
+    <div class="section">
+      <div class="title">
+        <h2 id="condTitle">Selecione uma condição</h2>
+        <div class="btns">
+          <button id="copyAllBtn" disabled>Copiar tudo</button>
+          <button id="copyRxBtn" disabled>Copiar receita</button>
+          <button id="resetBtn">Limpar</button>
+        </div>
+      </div>
+
+      <div class="box">
+        <h4>Bizu</h4>
+        <div id="bizu" class="note muted">—</div>
+      </div>
+
+      <div class="box">
+        <h4>Condutas</h4>
+        <div id="condutas" class="note muted">—</div>
+      </div>
+
+      <div class="box">
+        <h4>Receitas / Prescrições (por via)</h4>
+        <div id="vias"></div>
+      </div>
+
+      <div class="box">
+        <h4>Bloco para copiar (receita pronta)</h4>
+        <pre id="rxText" class="muted">—</pre>
+      </div>
+
+      <div class="foot">
+        Atenção: use como “consulta rápida”. Ajuste conforme idade, peso, comorbidades, alergias, gestação/lactação e gravidade.
+      </div>
+    </div>
+  </section>
+
+  <!-- Coluna direita -->
+  <aside class="card">
+    <div class="title">
+      <h2>Atalhos e lembretes</h2>
+    </div>
+
+    <div class="box">
+      <h4>Dipirona: EV vs IM (prático no PS)</h4>
+      <div class="note">
+        <ul>
+          <li><strong>EV</strong>: efeito mais rápido e previsível; útil quando dor intensa, necessidade de resposta imediata ou paciente em observação. Preferir <strong>bolus lento</strong> e monitorar reações (hipotensão/hipersensibilidade).</li>
+          <li><strong>IM</strong>: alternativa quando não há acesso venoso, paciente estável e dor leve–moderada, ou para “porta de entrada” antes de punção difícil. Pode ter início mais lento e ser mais dolorosa no local.</li>
+          <li><span class="tag">Apresentação</span> considerar sempre <strong>1 g / 2 mL</strong> (ampola), conforme seu padrão.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box">
+      <h4>Diluições comuns (do seu print)</h4>
+      <div class="note">
+        <ul>
+          <li>Dipirona <strong>1 g/2 mL</strong>: EV diluir em “AD” conforme protocolo local; IM pode ser “puro”.</li>
+          <li>Escopolamina: EV com AD; IM como opção.</li>
+          <li>Cetoprofeno 100 mg: EV diluir em SF 0,9% 100 mL e correr ~20 min.</li>
+          <li>Tramadol 100 mg: EV em SF 0,9% ou SG 5% 100 mL.</li>
+          <li>Morfina: fracionar dose EV após diluição em AD.</li>
+        </ul>
+        <div class="muted" style="margin-top:8px;font-size:11px;">
+          Observação: o PSZerado traz exemplos coerentes para cetoprofeno EV em 100 mL SF e dipirona 1 g/2 mL EV em bolus lento. :contentReference[oaicite:5]{index=5}
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h4>Como completar com o restante do PDF</h4>
+      <div class="note">
+        Você só precisa adicionar novos itens no objeto <code>conditionsData</code>, seguindo o mesmo formato:
+        <ul>
+          <li><strong>bizu</strong>: lembrete curto</li>
+          <li><strong>condutas</strong>: passos objetivos</li>
+          <li><strong>vias</strong>: EV/IM/VO/Tópico… com lista de prescrições</li>
+          <li><strong>rxText</strong>: bloco pronto para copiar</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // =========================
+  // BANCO DE DADOS (edite aqui)
+  // =========================
+  const conditionsData = {
+    // Seus modelos (exemplo: mantive sua estrutura e deixei espaço para você enriquecer com bizu/conduta)
+    "LOMBALGIA": {
+      bizu: "Dor lombar mecânica: orientar repouso relativo, calor local, retorno se déficit neurológico, febre, trauma, dor noturna/progressiva.",
+      condutas: [
+        "Avaliar sinais de alarme (déficit neurológico, retenção urinária, anestesia em sela, febre, trauma importante).",
+        "Se mecânica e sem red flags: analgesia + relaxante muscular curto + orientações (calor local, ergonomia)."
+      ],
+      vias: {
+        "USO ORAL": [
+          "CETOPROFENO 100 mg — 01 caixa — Tomar 01 comprimido VO 12/12h por 5 dias",
+          "MIOSAN (ciclobenzaprina) 10 mg — 01 caixa — Tomar 01 comprimido VO à noite por 5 dias",
+          "DIPIRONA 1 g — 01 caixa — Tomar 01 comprimido VO 6/6h se dor (máx. conforme protocolo)"
+        ],
+        "USO IM/EV (opção no PS)": [
+          "DIPIRONA 1 g/2 mL — 01 ampola — Aplicar IM (se sem acesso venoso) OU EV em bolus lento",
+          "CETOPROFENO 100 mg/2 mL — 01 ampola — Diluir em 100 mL SF 0,9% EV e correr em 20 min (se disponível)"
+        ]
+      },
+      rxText: `LOMBALGIA (sem sinais de alarme)
+1) Cetoprofeno 100 mg ------------------------- 01 caixa
+   Tomar 01 comprimido VO 12/12h por 5 dias.
+
+2) Ciclobenzaprina 10 mg ---------------------- 01 caixa
+   Tomar 01 comprimido VO à noite por 5 dias.
+
+3) Dipirona 1 g -------------------------------- 01 caixa
+   Tomar 01 comprimido VO 6/6h se dor.
+
+Orientações: repouso relativo, calor local, retorno se piora, febre, déficit neurológico.`
+    },
+
+    "DOR ABDOMINAL": {
+      bizu: "Sempre estratificar gravidade: dor intensa progressiva, sinais peritoneais, instabilidade, vômitos incoercíveis, sangramento, gestação = prioridade.",
+      condutas: [
+        "Sinais vitais, exame abdominal completo, hidratação conforme necessidade.",
+        "Analgesia (não “mascara” peritonite de forma clinicamente relevante quando bem avaliado).",
+        "Se náuseas/vômitos: antiemético.",
+        "Definir exames/Imagem conforme hipótese (apendicite, colecistite, pancreatite, ITU, etc.)."
+      ],
+      vias: {
+        "USO ORAL": [
+          "TROPINAL — 01 caixa — Tomar 01 comprimido VO 8/8h se cólica/dor abdominal",
+          "ENAVO ODT 4 mg — 01 caixa — Tomar 01 comprimido VO 8/8h se náuseas/vômitos"
+        ],
+        "USO IM/EV (opção no PS)": [
+          "DIPIRONA 1 g/2 mL — 01 ampola — EV (bolus lento) ou IM (se sem acesso)",
+          "BUTILBROMETO DE ESCOPOLAMINA (se disponível) — conforme protocolo local",
+          "ONDANSETRONA 4 mg/mL — 01 ampola — Diluir em SF e administrar EV conforme rotina do serviço"
+        ]
+      },
+      rxText: `DOR ABDOMINAL (sem sinais de alarme)
+1) Dipirona 1 g -------------------------------- 01 caixa
+   Tomar 01 comprimido VO 6/6h se dor.
+
+2) Butilbrometo de escopolamina 10 mg ---------- 01 caixa
+   Tomar 01 comprimido VO 8/8h se cólica.
+
+Se náuseas/vômitos:
+3) Ondansetrona 4 mg ODT ----------------------- 01 caixa
+   Tomar 01 comprimido VO 8/8h se náuseas/vômitos.
+
+Retorno imediato se febre alta, piora progressiva, vômitos incoercíveis, sangue nas fezes/vômito, desmaio, sinais peritoneais.`
+    },
+
+    // =========================
+    // Itens já preenchidos com PSZerado (exemplos robustos)
+    // =========================
+    "URETEROLITIASE": {
+      bizu: "Retornar se sinais de alarme, infecção, refratariedade; cálculos >10 mm tendem a precisar de procedimento; maior efetividade clínica costuma ser em cálculos pequenos (até ~4–5 mm).",
+      condutas: [
+        "Analgesia em etapas (AINE ± dipirona ± opioide) e antiemético se necessário.",
+        "Considerar terapia expulsiva com alfa-bloqueador e orientações de retorno.",
+        "Avaliar sinais de infecção urinária/sepse e obstrução complicada."
+      ],
+      vias: {
+        "USO INTRAVENOSO": [
+          "CETOPROFENO 100 mg/2 mL — 01 ampola — Diluir 01 ampola em 100 mL SF 0,9% e correr em ~20 min",
+          "DIPIRONA 1 g/2 mL — 01 ampola — Fazer EV em bolus lento",
+          "MORFINA 10 mg/mL — 01 ampola — Diluir em 10 mL de AD e titular 4–5 mL EV conforme dor",
+          "ONDANSETRONA 4 mg/mL — 01 ampola — Diluir em 100 mL SF 0,9% e correr em ~20 min"
+        ],
+        "USO ORAL": [
+          "DIPIRONA 1 g — Tomar 01 comprimido VO 6/6h",
+          "DICLOFENACO 50 mg — Tomar 01 comprimido VO 12/12h por no máximo 5 dias",
+          "TANSULOSINA 0,4 mg — Tomar 01 comprimido VO à noite por até 10 dias",
+          "Opção: NIFEDIPINO 10 mg — Tomar 01 comprimido VO 8/8h por 10 dias"
+        ],
+        "USO IM (se sem acesso venoso)": [
+          "DIPIRONA 1 g/2 mL — 01 ampola — Aplicar IM (alternativa no PS, se necessário)"
+        ]
+      },
+      rxText: `URETEROLITÍASE (cólica nefrética) – conduta sintomática
+EV (se dor intensa):
+- Cetoprofeno 100 mg/2 mL ------------- 01 ampola
+  Diluir em 100 mL SF 0,9% e correr em ~20 min.
+- Dipirona 1 g/2 mL ------------------- 01 ampola
+  EV em bolus lento.
+- Ondansetrona 4 mg/mL ---------------- 01 ampola
+  Diluir em 100 mL SF 0,9% e correr em ~20 min.
+
+Casa:
+1) Dipirona 1 g ------------------------ 01 caixa
+   Tomar 01 comp VO 6/6h se dor.
+2) Diclofenaco 50 mg ------------------- 01 caixa
+   Tomar 01 comp VO 12/12h por até 5 dias.
+3) Tansulosina 0,4 mg ------------------ 01 caixa
+   Tomar 01 comp VO à noite por até 10 dias.
+
+Orientar retorno: febre, piora, vômitos incoercíveis, anúria, dor refratária.`
+    },
+
+    "LOMBALGIA_TORCICOLO_PSZ": {
+      bizu: "Lombalgia/torcicolo mecânico: foco em analgesia + relaxante curto; orientar calor local, repouso relativo e retirada de fator de piora.",
+      condutas: [
+        "Checar red flags (déficit neurológico, trauma, febre, dor progressiva/noturna).",
+        "Se mecânico: analgesia + AINE curto + relaxante; orientar calor local 8/8h."
+      ],
+      vias: {
+        "USO INTRAVENOSO": [
+          "CETOPROFENO 100 mg/2 mL — 01 ampola — Diluir em 100 mL SF 0,9% e correr em ~20 min",
+          "DIPIRONA 1 g/2 mL — 01 ampola — EV em bolus lento",
+          "TRAMADOL 100 mg/2 mL — 01 ampola — Diluir em 100 mL SF 0,9% e correr em ~30 min"
+        ],
+        "USO ORAL": [
+          "Associação analgésica (paracetamol + cafeína + carisoprodol + diclofenaco) — 01 caixa — 12/12h (ou 8/8h) por até 7 dias",
+          "CICLOBENZAPRINA 10 mg — 01 caixa — 12/12h por 5 dias",
+          "DIPIRONA 1 g — 01 caixa — 6/6h se dor",
+          "PARACETAMOL 750 mg — 01 caixa — 8/8h (dose máxima diária conforme protocolo)",
+          "CETOPROFENO 150 mg — 01 caixa — 12/12h por até 5 dias",
+          "IBUPROFENO 400 mg — 01 caixa — 6/6h por até 5 dias"
+        ],
+        "USO IM (se sem acesso venoso)": [
+          "DIPIRONA 1 g/2 mL — 01 ampola — Aplicar IM (alternativa no PS)"
+        ]
+      },
+      rxText: `LOMBALGIA MECÂNICA / TORCICOLO – PS (exemplo)
+EV (se necessário):
+- Cetoprofeno 100 mg/2 mL ------------- 01 ampola
+  Diluir em 100 mL SF 0,9% e correr em ~20 min.
+- Dipirona 1 g/2 mL ------------------- 01 ampola
+  EV em bolus lento.
+
+Casa:
+1) Ciclobenzaprina 10 mg -------------- 01 caixa
+   Tomar 01 comp VO 12/12h por 5 dias.
+2) Dipirona 1 g ----------------------- 01 caixa
+   Tomar 01 comp VO 6/6h se dor.
+
+Orientações: calor local 8/8h, repouso relativo, retorno se déficit neurológico/febre/piora.`
+    },
+
+    "FA_FLUTTER": {
+      bizu: "Em instabilidade hemodinâmica: cardioversão elétrica. Em FA crônica (>48h), evitar cardioversão sem excluir trombo atrial e lembrar anticoagulação conforme risco.",
+      condutas: [
+        "Definir estabilidade (choque/hipotensão, dor torácica isquêmica, rebaixamento, dispneia de origem cardíaca).",
+        "Estável: controle de frequência (BB/BCa/digital) e/ou cardioversão química em cenários selecionados.",
+        "Instável: cardioversão elétrica sincronizada."
+      ],
+      vias: {
+        "USO EV (exemplos)": [
+          "AMIODARONA 150 mg/3 mL — Ataque 5–7 mg/kg em SG 5% 100 mL EV em 30–60 min; manutenção em BIC conforme protocolo",
+          "METOPROLOL 5 mg/5 mL — 1 ampola EV em 2 min; repetir a cada 5 min até dose total 20 mg",
+          "VERAPAMIL 5 mg/2 mL — 1–2 ampolas EV em 2–5 min; pode repetir após 30 min (máx 20 mg)",
+          "DESLANOSÍDEO 0,4 mg/2 mL — 1–2 ampolas EV lentamente em 24h (selecionar casos)"
+        ],
+        "USO ORAL (pós cardioversão / manutenção selecionada)": [
+          "AMIODARONA 100 mg — 300 mg VO 12/12h (exemplo pós cardioversão, conforme cenário clínico)"
+        ]
+      },
+      rxText: `FA/FLUTTER – lembrete de plantão
+1) Se INSTÁVEL (choque/hipotensão, dor isquêmica, rebaixamento, dispneia cardíaca):
+   - Cardioversão elétrica sincronizada.
+
+2) Se ESTÁVEL:
+   - Controle de FC (metoprolol EV / verapamil EV / digital conforme perfil)
+   - Considerar amiodarona para cardioversão química conforme indicação.
+
+Atenção: FA >48h → não cardioverter sem excluir trombo; avaliar anticoagulação.`
+    },
+
+    "ANAFILAXIA_CHOQUE": {
+      bizu: "Adrenalina IM é a medida prioritária no choque anafilático. Aplicar em vasto lateral (face anterolateral da coxa).",
+      condutas: [
+        "Reconhecer anafilaxia, acionar suporte, O2, acesso venoso, fluidos se choque.",
+        "Adrenalina IM imediata; reavaliar e repetir se necessário conforme resposta.",
+        "Após estabilização: anti-histamínico/corticoide como adjuvantes (não substituem adrenalina)."
+      ],
+      vias: {
+        "USO IM (primeira linha)": [
+          "ADRENALINA 1 mg/mL — Adulto >50 kg: 0,5 mg (0,5 mL = meia ampola) IM em vasto lateral",
+          "Crianças: 25–50 kg: 0,3 mg; 10–25 kg: 0,15 mg; <10 kg: 0,01 mL/kg IM"
+        ],
+        "USO ORAL (alergias/urticária, após estabilização)": [
+          "LORATADINA 10 mg — 1x/dia por 5–7 dias (pode 2x/dia em muito sintomáticos, com alerta de sonolência)",
+          "DESLORATADINA 5 mg — 1–2x/dia (menor sonolência)",
+          "HIDROXIZINA 25 mg — à noite (sonolência)"
+        ]
+      },
+      rxText: `ANAFILAXIA / CHOQUE ANAFILÁTICO
+IM imediato:
+- Adrenalina 1 mg/mL ------------------- 0,5 mL IM (adulto >50 kg)
+  Aplicar em vasto lateral. Reavaliar e repetir conforme resposta.
+
+Suporte:
+- O2, acesso venoso, fluidos se choque, monitorização.
+
+Adjuvantes (após estabilização, não substituem adrenalina):
+- Anti-histamínico +/- corticoide conforme quadro clínico.`
+    },
+
+    "SEDACAO_POS_IOT": {
+      bizu: "Idealmente ajustar midazolam por RASS/Ramsay e fentanil por escala de dor (ex.: BPS). Evitar sedação profunda sem indicação.",
+      condutas: [
+        "Iniciar sedoanalgesia em BIC e titular para alvo (conforto/assincronia).",
+        "Reavaliar frequentemente (pressão, drive respiratório, delirium, necessidade real de sedação)."
+      ],
+      vias: {
+        "BIC (exemplos)": [
+          "FENTANIL 50 mcg/mL — Diluir 4 ampolas (40 mL) em 160 mL NaCl 0,9% e iniciar 5–8 mL/h (ou usar puro em seringa conforme protocolo)",
+          "MIDAZOLAM 50 mg/10 mL — Diluir 4 ampolas (40 mL) em 60 mL SF 0,9% e iniciar 5–8 mL/h (titular por RASS)",
+          "CETAMINA 50 mg/mL (10 mL) — Diluir 1 ampola em 90 mL SG 5% e iniciar 3–6 mL/h (titular)"
+        ]
+      },
+      rxText: `SEDAÇÃO PÓS-IOT (exemplo de BIC)
+1) Fentanil 50 mcg/mL ------------------ 4 ampolas
+   Diluir 40 mL em 160 mL SF 0,9% e iniciar 5–8 mL/h (titular pela dor/BPS).
+
+2) Midazolam 50 mg/10 mL --------------- 4 ampolas
+   Diluir 40 mL em 60 mL SF 0,9% e iniciar 5–8 mL/h (titular por RASS).
+
+(Alternativa/adição: cetamina em BIC conforme protocolo).`
+    }
+  };
+
+  // Chips (atalhos)
+  const commonChips = [
+    "DOR ABDOMINAL","LOMBALGIA","URETEROLITIASE",
+    "ANAFILAXIA_CHOQUE","FA_FLUTTER","SEDACAO_POS_IOT"
+  ];
+
+  // =========================
+  // UI LOGIC
+  // =========================
+  const sel = document.getElementById("conditionSelect");
+  const search = document.getElementById("searchInput");
+  const title = document.getElementById("condTitle");
+  const bizuEl = document.getElementById("bizu");
+  const condEl = document.getElementById("condutas");
+  const viasEl = document.getElementById("vias");
+  const rxEl = document.getElementById("rxText");
+  const copyAllBtn = document.getElementById("copyAllBtn");
+  const copyRxBtn = document.getElementById("copyRxBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const chipsEl = document.getElementById("quickChips");
+
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function renderChips(){
+    chipsEl.innerHTML = "";
+    commonChips.forEach(k=>{
+      const chip = document.createElement("div");
+      chip.className="chip";
+      chip.textContent = k.replaceAll("_"," ");
+      chip.onclick = ()=>{
+        sel.value = k;
+        sel.dispatchEvent(new Event("change"));
+      };
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  function renderCondition(key){
+    const data = conditionsData[key];
+    if(!data){
+      title.textContent = "Selecione uma condição";
+      bizuEl.textContent = "—";
+      condEl.textContent = "—";
+      viasEl.innerHTML = `<div class="note muted">—</div>`;
+      rxEl.textContent = "—";
+      copyAllBtn.disabled = true;
+      copyRxBtn.disabled = true;
+      return;
+    }
+
+    title.textContent = key.replaceAll("_"," ");
+
+    // Bizu
+    bizuEl.textContent = data.bizu || "—";
+
+    // Condutas
+    if(Array.isArray(data.condutas) && data.condutas.length){
+      condEl.innerHTML = `<ul>${data.condutas.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+    } else {
+      condEl.textContent = "—";
+    }
+
+    // Vias
+    const vias = data.vias || {};
+    const viaKeys = Object.keys(vias);
+    if(!viaKeys.length){
+      viasEl.innerHTML = `<div class="note muted">—</div>`;
+    } else {
+      viasEl.innerHTML = viaKeys.map(vk=>{
+        const items = vias[vk] || [];
+        return `
+          <div class="box">
+            <h4>${escapeHtml(vk)}</h4>
+            ${items.length ? `<ul>${items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul>` : `<div class="muted">—</div>`}
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Rx text
+    rxEl.textContent = data.rxText || "—";
+
+    copyAllBtn.disabled = false;
+    copyRxBtn.disabled = false;
+  }
+
+  function copyText(txt){
+    navigator.clipboard.writeText(txt).then(()=>{
+      // ok
+    }).catch(()=>{
+      alert("Não foi possível copiar automaticamente. Selecione e copie manualmente.");
+    });
+  }
+
+  function buildAllText(key){
+    const data = conditionsData[key];
+    if(!data) return "";
+    const lines = [];
+    lines.push(`${key.replaceAll("_"," ")}\n`);
+    if(data.bizu) lines.push(`BIZU: ${data.bizu}\n`);
+    if(Array.isArray(data.condutas) && data.condutas.length){
+      lines.push("CONDUTAS:");
+      data.condutas.forEach((c,i)=>lines.push(`  ${i+1}. ${c}`));
+      lines.push("");
+    }
+    const vias = data.vias || {};
+    Object.keys(vias).forEach(vk=>{
+      lines.push(vk + ":");
+      (vias[vk]||[]).forEach(i=>lines.push(`  - ${i}`));
+      lines.push("");
+    });
+    if(data.rxText){
+      lines.push("RECEITA (para copiar):\n" + data.rxText);
+    }
+    return lines.join("\n");
+  }
+
+  function applySearchFilter(){
+    const q = (search.value || "").trim().toLowerCase();
+    const key = sel.value;
+    if(!key || !conditionsData[key]) return;
+
+    if(!q){
+      renderCondition(key);
+      return;
+    }
+
+    const data = conditionsData[key];
+    const clone = JSON.parse(JSON.stringify(data));
+
+    // filtra vias
+    if(clone.vias){
+      for(const vk of Object.keys(clone.vias)){
+        clone.vias[vk] = (clone.vias[vk]||[]).filter(it => (it||"").toLowerCase().includes(q));
+      }
+    }
+
+    // filtra condutas (opcional)
+    if(Array.isArray(clone.condutas)){
+      clone.condutas = clone.condutas.filter(it => (it||"").toLowerCase().includes(q));
+    }
+
+    // render do clone
+    title.textContent = key.replaceAll("_"," ") + " (filtrado)";
+    bizuEl.textContent = clone.bizu || "—";
+    condEl.innerHTML = (clone.condutas && clone.condutas.length)
+      ? `<ul>${clone.condutas.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>`
+      : `<div class="muted">Sem correspondências em condutas.</div>`;
+
+    const vias = clone.vias || {};
+    const viaKeys = Object.keys(vias);
+    viasEl.innerHTML = viaKeys.map(vk=>{
+      const items = vias[vk] || [];
+      return `
+        <div class="box">
+          <h4>${escapeHtml(vk)}</h4>
+          ${items.length ? `<ul>${items.map(i=>`<li>${escapeHtml(i)}</li>`).join("")}</ul>` : `<div class="muted">Sem correspondências nesta via.</div>`}
+        </div>
+      `;
+    }).join("");
+
+    rxEl.textContent = clone.rxText || "—";
+  }
+
+  sel.addEventListener("change", ()=>{
+    search.value = "";
+    renderCondition(sel.value);
+  });
+
+  search.addEventListener("input", applySearchFilter);
+
+  copyRxBtn.addEventListener("click", ()=>{
+    const key = sel.value;
+    const data = conditionsData[key];
+    if(!data) return;
+    copyText(data.rxText || "");
+  });
+
+  copyAllBtn.addEventListener("click", ()=>{
+    const key = sel.value;
+    copyText(buildAllText(key));
+  });
+
+  resetBtn.addEventListener("click", ()=>{
+    sel.value = "";
+    search.value = "";
+    renderCondition("");
+  });
+
+  renderChips();
+  renderCondition("");
+</script>
+</body>
+</html>

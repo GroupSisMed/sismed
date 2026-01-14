@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meus Links Úteis</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --ring: rgba(37, 99, 235, .25);
+      --border: #e5e7eb;
+      --tag: #eef2ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f14;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --primary: #60a5fa;
+        --ring: rgba(96, 165, 250, .25);
+        --border: #1f2937;
+        --tag: #1e293b;
+      }
+    }
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 100% -10%, rgba(37,99,235,.06), transparent 60%),
+                  radial-gradient(1000px 500px at -20% 0%, rgba(16,185,129,.06), transparent 60%),
+                  var(--bg);
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: .2px;
+    }
+    .toolbar {
+      display: grid;
+      gap: 10px;
+    }
+    @media (min-width: 720px) {
+      .toolbar { grid-template-columns: 1fr auto; align-items: center; }
+    }
+    .search {
+      display: flex; gap: 8px; align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+    }
+    .search input {
+      width: 100%; border: 0; outline: none; background: transparent;
+      color: var(--text); font-size: 1rem;
+    }
+    .count {
+      font-size: .95rem; color: var(--muted);
+    }
+    .tags {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+    }
+    .tag {
+      padding: 6px 10px; border-radius: 999px;
+      background: var(--tag);
+      border: 1px solid var(--border);
+      font-size: .85rem; cursor: pointer; user-select: none;
+    }
+    .tag[aria-pressed="true"] {
+      outline: 2px solid var(--ring);
+      background: rgba(37,99,235,.12);
+      border-color: var(--primary); color: var(--primary);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+    .card {
+      display: grid; gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.06);
+    }
+    .title {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-weight: 600; letter-spacing: .2px;
+    }
+    .desc {
+      color: var(--muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-size: .92rem;
+      min-height: 3.6em;
+    }
+    .meta {
+      display: flex; gap: 8px; align-items: center; justify-content: space-between;
+      font-size: .85rem; color: var(--muted);
+    }
+    .link {
+      text-decoration: none; color: var(--primary); font-weight: 600;
+    }
+    .footer {
+      margin: 28px 0 10px; text-align: center; color: var(--muted); font-size: .9rem;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Meus Links</h1>
+      <div class="toolbar" role="region" aria-label="Ferramentas">
+        <label class="search" aria-label="Buscar">
+          <span aria-hidden="true">🔎</span>
+          <input id="q" type="search" placeholder="Buscar por título, descrição ou tag…" autocomplete="off" />
+        </label>
+        <div class="count" id="count" aria-live="polite"></div>
+      </div>
+      <div class="tags" id="tags" aria-label="Filtrar por tags"></div>
+    </header>
+
+    <main>
+      <section class="grid" id="list" aria-live="polite"></section>
+      <p class="footer">Dica: clique no título para abrir o link ✨</p>
+    </main>
+  </div>
+
+  <script>
+    // ==========================================================
+    // === LISTA DE LINKS: EDITE AQUI ===========================
+    // Substitua os exemplos abaixo pelos seus links.
+    // Formato de cada item:
+    // { title: "Título", url: "https://exemplo.com", desc: "Descrição opcional", tags: ["tag1","tag2"] }
+    const LINKS = [
+      { title: "DOSES PED POR KG", url: "https://docs.google.com/spreadsheets/d/1uHAW0_-hLVq-Sd3aKsvYZrL4kRQzZG0H-xnmpSMXFRE/edit?usp=sharing", desc: "Dose de medicações e diliuções para crianças por peso", tags: ["medicação","prescrição","pediatria"] },
+      { title: "PRESCRIÇÃO INFANTIL", url: "https://docs.google.com/document/d/1l7X6BRW2CG9OiRiHfRcY8i7XMbRHuShlmOE06pHaIPw/edit?usp=sharing", desc: "Dose de medicações e diliuções para crianças e orientações", tags: ["medicação","prescrição","pediatria"] },
+      { title: "PRESCRIÇÃO ADULTO", url: "https://docs.google.com/document/d/12WrgQSZUE9PqbJT8lj0GCDIQYXUKHiwr/edit?usp=sharing&ouid=104749038519859581239&rtpof=true&sd=true", desc: "Dose de medicações e diliuções para adultos e orientações", tags: ["medicação","prescrição","adulto"] },
+      { title: "MEDICAMENTOS URGÊNCIA/UTI", url: "https://docs.google.com/document/d/1KJ93ffl0QWpliD27Vytmbwzy5fg-6zF0ivomp-sFSRM/edit?usp=sharing", desc: "DILUIÇÕES e PRESCRIÇÔES", tags: ["medicação","prescrição","adulto"] },
+      { title: "PLANTÃO RÁPIDO", url: "https://drive.google.com/file/d/18X-3w8df7nbxjqVohjg5l1VmuftxbKQh/view?usp=sharing", desc: "DILUIÇÕES e PRESCRIÇÔES e CONDUTAS e EXAMES", tags: ["medicação","prescrição","adulto","avaliação","exame"] },
+      { title: "GUIA ANTIMICROBIANO 2022-2024", url: "https://drive.google.com/file/d/1VdjGD-OS5LYbwV0nYBkP9qNz_dcO7l4V/view?usp=sharing", desc: "DILUIÇÕES e PRESCRIÇÔES", tags: ["medicação","prescrição"] },
+      { title: "DICAS DE PLANTÃO - PRESCRIÇÂO POR DOENÇA", url: "https://docs.google.com/document/d/181A2HMOf7DhqcxKgN_askTsgU5aTZyKi1dxxUox_DJE/edit?usp=sharing", desc: "DILUIÇÕES e PRESCRIÇÔES e CONDUTAS e EXAMES", tags: ["medicação","prescrição","adulto","avaliação","exame"] },
+      { title: "GUIA IMAGEM ABDOMEN", url: "https://drive.google.com/file/d/15hcfgNw9UX9nWyxkN89IfJNxSnr6H_Kp/view?usp=sharing", desc: "IMAGEM ABDOMEN SIMPLES", tags: ["exame","imagem"] },
+      { title: "POSTINHO - COMPLETO", url: "https://docs.google.com/document/d/1imkwn87yd0OKXwRyTct95yRxXIEOpjI7AWYnpwAs1rQ/edit?usp=sharing", desc: "Rotina UBS / Postinho / PSF / ESF", tags: ["exame","avaliação","gestante","adolescente","anamnese","adulto","criança","mulher","homem"] },
+      { title: "PS FACIL", url: "https://drive.google.com/file/d/12oGFqvXeMDSoEMzkNusw7Jv7hSjcQZf6/view?usp=sharing", desc: "Rotina PS / UPA / Urgência / Emergencia", tags: ["receita","medicação","prescrição"] },
+      { title: "AMIM", url: "https://amimcare.com/", desc: "Prescrição Intesiva", tags: ["prescrição"] },
+      { title: "GUIA FARMACÊUTICO - SL", url: "https://guiafarmaceutico.hsl.org.br/", desc: " Guia Farmacêutico -  Hospital Sírio- Libanês", tags: ["medicação"] },
+      { title: "PRESCRIÇÃO COMPLETA", url: "https://homeropereira07.github.io/sismed/prescricao.html", desc: " PRESCRIÇÃO COMPLETA ", tags: ["medicação"] },
+      { title: "PRESCRIÇÃO COMPLETA - FAST", url: "https://homeropereira07.github.io/sismed/prescricaofast.html", desc: " PRESCRIÇÃO COMPLETA - FAST", tags: ["medicação"] },
+      { title: "RESUMÃO DO PLANTÃO", url: "https://drive.google.com/file/d/1--h1ZC0zoY6eY78KTl9eYl6lZLaQ7EZc/view?usp=sharing", desc: " RESUMÃO DO PLANTÃO", tags: ["plantão","ajuda"] },
+      { title: "PRESCRIÇÃO SOS", url: "https://drive.google.com/file/d/1neZy2BMVJ2tSiPYQB9FADjUAu-x-L2YY/view?usp=sharing", desc: " RESUMÃO DO PLANTÃO", tags: ["plantão","ajuda"] },
+      { title: "Prescrições Prontas", url: "https://drive.google.com/file/d/18X-3w8df7nbxjqVohjg5l1VmuftxbKQh/view?usp=sharing", desc: " RESUMÃO DO PLANTÃO", tags: ["plantão","ajuda"] },
+      { title: "PASTA SOS", url: "https://drive.google.com/drive/folders/1kQqm_qIl6yukwWiAmyLgBqVppHAyP5oQ?usp=sharing", desc: " PASTA SOS", tags: ["plantão","ajuda"] },
+
+      
+      // Adicione mais itens aqui…
+    ];
+    // === FIM DA SEÇÃO EDITÁVEL ================================
+    // ==========================================================
+
+    // ====== Lógica da interface (não precisa editar) ==========
+    const listEl = document.getElementById('list');
+    const qEl = document.getElementById('q');
+    const countEl = document.getElementById('count');
+    const tagsEl = document.getElementById('tags');
+
+    // Coletar universo de tags
+    const allTags = Array.from(new Set(LINKS.flatMap(i => i.tags || []).map(t => String(t).trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const activeTags = new Set();
+
+    function formatHost(url) {
+      try { return new URL(url).host.replace(/^www\./,''); }
+      catch { return ""; }
+    }
+
+    function renderTags() {
+      tagsEl.innerHTML = '';
+      if (!allTags.length) return;
+      allTags.forEach(tag => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tag';
+        b.setAttribute('aria-pressed', 'false');
+        b.textContent = `#${tag}`;
+        b.addEventListener('click', () => {
+          if (activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+          b.setAttribute('aria-pressed', activeTags.has(tag) ? 'true' : 'false');
+          render();
+        });
+        tagsEl.appendChild(b);
+      });
+    }
+
+    function matchesText(item, q) {
+      if (!q) return true;
+      const hay = `${item.title} ${item.desc || ""} ${(item.tags||[]).join(" ")}`.toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    function matchesTags(item) {
+      if (!activeTags.size) return true;
+      const t = new Set((item.tags || []).map(String));
+      for (const tag of activeTags) if (!t.has(tag)) return false;
+      return true;
+    }
+
+    function render() {
+      const q = qEl.value.trim();
+      const filtered = LINKS.filter(i => matchesText(i, q) && matchesTags(i));
+      listEl.innerHTML = '';
+      filtered.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.className = 'link title';
+        a.textContent = item.title;
+
+        const d = document.createElement('p');
+        d.className = 'desc';
+        d.textContent = item.desc || '';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<span>${formatHost(item.url)}</span>` +
+                         `<span>${(item.tags||[]).map(t=>`#${t}`).join(' ')}</span>`;
+
+        card.appendChild(a);
+        if (item.desc) card.appendChild(d);
+        card.appendChild(meta);
+        listEl.appendChild(card);
+      });
+      countEl.textContent = `${filtered.length} link${filtered.length===1?'':'s'} exibido${filtered.length===1?'':'s'}` + 
+                            (activeTags.size ? ` • filtro: ${Array.from(activeTags).map(t=>`#${t}`).join(' ')}` : '');
+    }
+
+    qEl.addEventListener('input', render);
+
+    // Inicialização
+    renderTags();
+    render();
+  </script>
+</body>
+</html>

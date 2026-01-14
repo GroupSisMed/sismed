@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Unidades - SisMed Pro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚕️</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --text: #333;
+            --text-light: #7f8c8d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav li {
+            margin-left: 1.5rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 3rem 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-title p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        /* Form Section */
+        .form-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--light);
+            color: var(--text);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+            transform: translateY(-2px);
+        }
+        
+        /* Units List */
+        .units-section {
+            margin-top: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .units-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .unit-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .unit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .unit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .unit-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .unit-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .action-btn:hover {
+            color: var(--secondary);
+        }
+        
+        .unit-details {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .unit-detail {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .unit-detail i {
+            margin-right: 0.5rem;
+            color: var(--secondary);
+            width: 16px;
+        }
+        
+        .unit-specialties {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--light);
+        }
+        
+        .specialty-tag {
+            display: inline-block;
+            background-color: var(--light);
+            color: var(--text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #d5dbdb;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 2rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .footer-column a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column a:hover {
+            color: white;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">⚕️</span>
+                    <span>SisMed Pro</span>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="cadastro-unidades.html" style="color: #f1c40f;">Cadastro de Unidades</a></li>
+                        <li><a href="sistema.html">Sistema</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-title">
+                <h1>Cadastro de Unidades</h1>
+                <p>Gerencie todas as unidades de saúde onde você atua</p>
+            </div>
+            
+            <!-- Form Section -->
+            <section class="form-section">
+                <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Adicionar Nova Unidade</h2>
+                
+                <form id="unit-form">
+                    <div class="form-group">
+                        <label for="unit-name" class="form-label">Nome da Unidade *</label>
+                        <input type="text" id="unit-name" class="form-input" placeholder="Ex: Hospital Central, UPA Jardim das Flores" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="unit-address" class="form-label">Endereço Completo *</label>
+                        <textarea id="unit-address" class="form-textarea" placeholder="Ex: Av. Principal, 123 - Centro, Cidade - Estado, CEP: 12345-678" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unit-phone" class="form-label">Telefone</label>
+                            <input type="tel" id="unit-phone" class="form-input" placeholder="(11) 99999-9999">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="unit-email" class="form-label">E-mail</label>
+                            <input type="email" id="unit-email" class="form-input" placeholder="contato@unidade.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unit-opening" class="form-label">Horário de Abertura</label>
+                            <input type="time" id="unit-opening" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="unit-closing" class="form-label">Horário de Fechamento</label>
+                            <input type="time" id="unit-closing" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="unit-schedule" class="form-label">Horário de Funcionamento (Texto)</label>
+                        <input type="text" id="unit-schedule" class="form-input" placeholder="Ex: Segunda a Sexta, 7h às 19h | Sábados, 7h às 13h">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="unit-specialties" class="form-label">Especialidades *</label>
+                        <textarea id="unit-specialties" class="form-textarea" placeholder="Liste as especialidades disponíveis nesta unidade, separadas por vírgula. Ex: Clínica Geral, Pediatria, Ortopedia, Cardiologia" required></textarea>
+                        <small style="color: var(--text-light);">Separe as especialidades por vírgula</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i>
+                            Salvar Unidade
+                        </button>
+                        <button type="button" id="clear-form" class="btn btn-secondary">
+                            <i class="fas fa-broom"></i>
+                            Limpar Formulário
+                        </button>
+                    </div>
+                </form>
+            </section>
+            
+            <!-- Units List -->
+            <section class="units-section">
+                <h2 class="section-title">Unidades Cadastradas</h2>
+                
+                <div id="units-container" class="units-grid">
+                    <!-- As unidades serão adicionadas aqui via JavaScript -->
+                    <div class="empty-state" id="empty-state">
+                        <i class="fas fa-hospital"></i>
+                        <h3>Nenhuma unidade cadastrada</h3>
+                        <p>Adicione sua primeira unidade usando o formulário acima.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>SisMed Pro</h3>
+                    <p>Sistema de prescrição médica inteligente para otimizar sua rotina e melhorar o atendimento aos pacientes.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Funcionalidades</h3>
+                    <ul>
+                        <li><a href="#">Prescrição de Medicamentos</a></li>
+                        <li><a href="#">Atestados Médicos</a></li>
+                        <li><a href="#">Controle Especial</a></li>
+                        <li><a href="#">Solicitação de Exames</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Contato</h3>
+                    <ul>
+                        <li><a href="mailto:suporte@sismedpro.com">suporte@sismedpro.com</a></li>
+                        <li><a href="tel:+551199999999">(11) 99999-9999</a></li>
+                        <li><a href="#">FAQ e Suporte</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                &copy; 2023 SisMed Pro. Todos os direitos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Armazenamento local para as unidades
+        let units = JSON.parse(localStorage.getItem('sismed_units')) || [];
+        
+        // Elementos DOM
+        const unitForm = document.getElementById('unit-form');
+        const unitsContainer = document.getElementById('units-container');
+        const emptyState = document.getElementById('empty-state');
+        const clearFormBtn = document.getElementById('clear-form');
+        
+        // Inicializar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            renderUnits();
+            
+            // Configurar o formulário
+            unitForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveUnit();
+            });
+            
+            // Configurar botão de limpar formulário
+            clearFormBtn.addEventListener('click', function() {
+                unitForm.reset();
+            });
+        });
+        
+        // Salvar unidade
+        function saveUnit() {
+            const unitName = document.getElementById('unit-name').value;
+            const unitAddress = document.getElementById('unit-address').value;
+            const unitPhone = document.getElementById('unit-phone').value;
+            const unitEmail = document.getElementById('unit-email').value;
+            const unitOpening = document.getElementById('unit-opening').value;
+            const unitClosing = document.getElementById('unit-closing').value;
+            const unitSchedule = document.getElementById('unit-schedule').value;
+            const unitSpecialties = document.getElementById('unit-specialties').value;
+            
+            // Validar campos obrigatórios
+            if (!unitName || !unitAddress || !unitSpecialties) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            // Criar objeto da unidade
+            const unit = {
+                id: Date.now().toString(),
+                name: unitName,
+                address: unitAddress,
+                phone: unitPhone,
+                email: unitEmail,
+                opening: unitOpening,
+                closing: unitClosing,
+                schedule: unitSchedule,
+                specialties: unitSpecialties.split(',').map(s => s.trim())
+            };
+            
+            // Adicionar à lista
+            units.push(unit);
+            
+            // Salvar no localStorage
+            localStorage.setItem('sismed_units', JSON.stringify(units));
+            
+            // Atualizar a interface
+            renderUnits();
+            
+            // Limpar formulário
+            unitForm.reset();
+            
+            // Mostrar mensagem de sucesso
+            alert('Unidade cadastrada com sucesso!');
+        }
+        
+        // Renderizar unidades na tela
+        function renderUnits() {
+            // Limpar container
+            unitsContainer.innerHTML = '';
+            
+            // Verificar se há unidades
+            if (units.length === 0) {
+                unitsContainer.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            // Esconder estado vazio
+            emptyState.style.display = 'none';
+            
+            // Adicionar cada unidade
+            units.forEach(unit => {
+                const unitCard = document.createElement('div');
+                unitCard.className = 'unit-card';
+                
+                // Formatar horários
+                let scheduleText = unit.schedule || 'Horário não informado';
+                if (unit.opening && unit.closing) {
+                    scheduleText = `${unit.opening} às ${unit.closing}`;
+                    if (unit.schedule) {
+                        scheduleText += ` (${unit.schedule})`;
+                    }
+                }
+                
+                unitCard.innerHTML = `
+                    <div class="unit-header">
+                        <div class="unit-name">${unit.name}</div>
+                        <div class="unit-actions">
+                            <button class="action-btn edit-unit" data-id="${unit.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-unit" data-id="${unit.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="unit-details">
+                        <div class="unit-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${unit.address}</span>
+                        </div>
+                        
+                        ${unit.phone ? `
+                        <div class="unit-detail">
+                            <i class="fas fa-phone"></i>
+                            <span>${unit.phone}</span>
+                        </div>
+                        ` : ''}
+                        
+                        ${unit.email ? `
+                        <div class="unit-detail">
+                            <i class="fas fa-envelope"></i>
+                            <span>${unit.email}</span>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="unit-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>${scheduleText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="unit-specialties">
+                        ${unit.specialties.map(specialty => 
+                            `<span class="specialty-tag">${specialty}</span>`
+                        ).join('')}
+                    </div>
+                `;
+                
+                unitsContainer.appendChild(unitCard);
+            });
+            
+            // Adicionar event listeners para os botões de ação
+            document.querySelectorAll('.edit-unit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const unitId = this.getAttribute('data-id');
+                    editUnit(unitId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-unit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const unitId = this.getAttribute('data-id');
+                    deleteUnit(unitId);
+                });
+            });
+        }
+        
+        // Editar unidade
+        function editUnit(unitId) {
+            const unit = units.find(u => u.id === unitId);
+            if (!unit) return;
+            
+            // Preencher formulário com dados da unidade
+            document.getElementById('unit-name').value = unit.name;
+            document.getElementById('unit-address').value = unit.address;
+            document.getElementById('unit-phone').value = unit.phone || '';
+            document.getElementById('unit-email').value = unit.email || '';
+            document.getElementById('unit-opening').value = unit.opening || '';
+            document.getElementById('unit-closing').value = unit.closing || '';
+            document.getElementById('unit-schedule').value = unit.schedule || '';
+            document.getElementById('unit-specialties').value = unit.specialties.join(', ');
+            
+            // Remover a unidade da lista (será readicionada ao salvar)
+            units = units.filter(u => u.id !== unitId);
+            localStorage.setItem('sismed_units', JSON.stringify(units));
+            
+            // Atualizar a interface
+            renderUnits();
+            
+            // Rolar para o topo do formulário
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Excluir unidade
+        function deleteUnit(unitId) {
+            if (confirm('Tem certeza que deseja excluir esta unidade?')) {
+                units = units.filter(u => u.id !== unitId);
+                localStorage.setItem('sismed_units', JSON.stringify(units));
+                renderUnits();
+            }
+        }
+    </script>
+</body>
+</html>

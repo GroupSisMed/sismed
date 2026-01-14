@@ -1,2 +1,1 @@
-# sismed
-Sistema de Atendimento Hospitalar
+Primeiro sistema foca em médicos recém formado! 

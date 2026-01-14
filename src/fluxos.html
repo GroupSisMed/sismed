@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Apoio à Decisão - Emergência</title>
+    <style>
+        /* CSS COMPLETO - Adicionando todas as variáveis e estilos necessários */
+        :root {
+            --primary-color: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary-color: #34a853;
+            --danger-color: #ea4335;
+            --warning-color: #fbbc04;
+            --text-dark: #202124;
+            --text-light: #5f6368;
+            --border-color: #dadce0;
+            --background-light: #f8f9fa;
+            --background-white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Modal de Login */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-modal.active {
+            display: flex;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        button[type="submit"] {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background: var(--primary-dark);
+        }
+
+        .error-message {
+            display: none;
+            background-color: #ffebee;
+            color: var(--danger-color);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Estilos da Aplicação Principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .app-title h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info span {
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .current-time {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Navegação por Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--background-light);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Estilos dos Cards de Condição */
+        .condition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .condition-card {
+            background: var(--background-white);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .condition-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .condition-card.selected {
+            border-color: var(--primary-color);
+            background: #e8f0fe;
+        }
+
+        .condition-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .condition-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Estilos dos Campos de Exame */
+        .exam-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .exam-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .alert-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .icon {
+            font-size: 1.2rem;
+        }
+
+        /* Medicamentos de Emergência */
+        .emergency-med {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Prescrição para Alta */
+        .prescription-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prescription-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        /* Fluxos Interativos */
+        .fluxo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .fluxo-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .fluxo-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .fluxo-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .fluxo-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .fluxo-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .fluxo-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .fluxo-btn.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .fluxo-btn.secondary {
+            background: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .fluxo-btn.secondary:hover {
+            background: var(--border-color);
+        }
+
+        /* Fluxo Interativo */
+        #fluxo-interativo {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .step-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step-content {
+            margin-bottom: 2rem;
+        }
+
+        .step-text {
+            margin-bottom: 1.5rem;
+        }
+
+        .step-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-option {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .step-option:hover {
+            border-color: var(--primary-color);
+            background: #e8f0fe;
+        }
+
+        .step-option.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .step-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .step-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step-btn.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .step-btn.secondary {
+            background: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .step-btn.secondary:hover {
+            background: var(--border-color);
+        }
+
+        .step-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Calculadora NIHSS */
+        .calculadora-nihss {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calculadora-nihss.active {
+            display: flex;
+        }
+
+        .calculadora-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .calculadora-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .calculadora-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .calculadora-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .calculadora-group {
+            margin-bottom: 1rem;
+        }
+
+        .calculadora-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .calculadora-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .calculadora-result {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #e3f2fd;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .calculadora-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .calculadora-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calculadora-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .calculadora-btn.primary:hover {
+            background: #0d47a1;
+        }
+
+        .calculadora-btn.secondary {
+            background: #f1f3f4;
+            color: var(--text-dark);
+        }
+
+        .calculadora-btn.secondary:hover {
+            background: #e8eaed;
+        }
+
+        .tooltip {
+            cursor: help;
+            color: #007BFF;
+            font-size: 16px;
+            margin-left: 5px;
+        }
+
+        /* Ações */
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Login -->
+    <div id="loginModal" class="login-modal active">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>Sistema de Apoio à Decisão - Emergência</h2>
+                <p>Faça login para acessar o sistema</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginNome">Nome</label>
+                    <input type="text" id="loginNome" placeholder="Digite seu nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginCRM">CRM</label>
+                    <input type="text" id="loginCRM" placeholder="Digite seu CRM" required>
+                </div>
+                <div id="loginError" class="error-message">
+                    Credenciais inválidas. Por favor, verifique seus dados.
+                </div>
+                <button type="submit">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Calculadora NIHSS -->
+    <div id="calculadoraNIHSS" class="calculadora-nihss">
+        <div class="calculadora-container">
+            <div class="calculadora-header">
+                <h2>Calculadora NIHSS</h2>
+                <p>National Institutes of Health Stroke Scale</p>
+            </div>
+            <div class="calculadora-body" id="nihssCalculadoraBody">
+                <!-- Conteúdo será injetado via JavaScript -->
+            </div>
+            <div class="calculadora-result" id="nihssResultado" style="display: none;">
+                <h3>Resultado</h3>
+                <p><strong>Escore Total:</strong> <span id="nihssTotal">0</span></p>
+                <p><strong>Classificação:</strong> <span id="nihssClassificacao">Sem AVC</span></p>
+            </div>
+            <div class="calculadora-actions">
+                <button class="calculadora-btn secondary" onclick="fecharCalculadoraNIHSS()">Fechar</button>
+                <button class="calculadora-btn primary" onclick="calcularNIHSS()">Calcular NIHSS</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="display: none;" id="mainApp">
+        <!-- Cabeçalho da Aplicação -->
+        <header class="app-header">
+            <div class="app-title">
+                <h1>Sistema de Apoio à Decisão - Emergência</h1>
+                <div class="current-time" id="current-time"></div>
+            </div>
+            <div class="user-info">
+                <span id="currentUserName"></span>
+                <button class="logout-btn" id="logoutBtn">Sair</button>
+            </div>
+        </header>
+
+        <!-- Navegação por Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="patient">Paciente</button>
+                <button class="tab" data-tab="condition">Condição Clínica</button>
+                <button class="tab" data-tab="prescription">Prescrição</button>
+                <button class="tab" data-tab="condutas">Fluxos e Condutas</button>
+            </div>
+
+            <!-- Aba: Paciente -->
+            <div id="patient-tab" class="tab-content active">
+                <h2>Dados do Paciente</h2>
+                <form class="patient-form">
+                    <div class="form-group">
+                        <label for="patient-name">Nome Completo</label>
+                        <input type="text" id="patient-name" placeholder="Nome do paciente">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-dob">Data de Nascimento</label>
+                        <input type="date" id="patient-dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-age">Idade</label>
+                        <input type="number" id="patient-age" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-gender">Sexo</label>
+                        <select id="patient-gender" class="form-control">
+                            <option value="">Selecione...</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Feminino</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-sus">Número do SUS</label>
+                        <input type="text" id="patient-sus" placeholder="000 0000 0000 0000">
+                    </div>
+                    <div class="actions">
+                        <button type="button" class="btn btn-secondary" id="new-patient">Novo Paciente</button>
+                        <button type="button" class="btn btn-primary" id="next-to-condition">Próximo</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Aba: Condição Clínica -->
+            <div id="condition-tab" class="tab-content">
+                <h2>Selecione a Condição Clínica</h2>
+                <div class="condition-grid">
+                    <div class="condition-card" data-condition="pcr">
+                        <h3>Parada Cardiorrespiratória</h3>
+                        <p>PCR / Instabilidade Hemodinâmica</p>
+                    </div>
+                    <div class="condition-card" data-condition="sca">
+                        <h3>SCA</h3>
+                        <p>Síndrome Coronariana Aguda / Dor Torácica</p>
+                    </div>
+                    <div class="condition-card" data-condition="avc">
+                        <h3>AVC Agudo</h3>
+                        <p>Acidente Vascular Cerebral</p>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="back-to-patient">Voltar</button>
+                    <button type="button" class="btn btn-primary" id="next-to-condutas">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Aba: Fluxos e Condutas -->
+            <div id="condutas-tab" class="tab-content">
+                <h2>Fluxos e Condutas</h2>
+                <div class="fluxo-grid">
+                    <div class="fluxo-card" data-fluxo="avc">
+                        <h3>Fluxo AVC Agudo</h3>
+                        <p>Algoritmo para avaliação e manejo do AVC isquêmico agudo</p>
+                        <div class="fluxo-buttons">
+                            <button class="fluxo-btn secondary" onclick="verResumo('avc')">Ver Resumo</button>
+                            <button class="fluxo-btn primary">Iniciar Fluxo</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="fluxo-interativo"></div>
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="back-to-condition-condutas">Voltar</button>
+                    <button type="button" class="btn btn-primary" id="next-to-prescription-condutas">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Aba: Prescrição -->
+            <div id="prescription-tab" class="tab-content">
+                <h2>Prescrição Médica</h2>
+                <div class="prescription-content">
+                    <div class="exam-section">
+                        <h3>Exame Físico Específico</h3>
+                        <div id="specific-exam">
+                            <p class="alert-box alert-info">
+                                <span class="icon">ℹ️</span>
+                                Selecione uma condição clínica na aba anterior para visualizar o exame físico específico.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="medications-section">
+                        <h3>Medicamentos para Emergência</h3>
+                        <div id="emergency-medications"></div>
+                    </div>
+                    <div class="home-prescription-section">
+                        <h3>Prescrição para Alta</h3>
+                        <div id="home-prescription">
+                            <p class="alert-box alert-info">
+                                <span class="icon">ℹ️</span>
+                                Selecione uma condição clínica para visualizar a prescrição para alta.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="back-to-condutas">Voltar</button>
+                    <button type="button" class="btn btn-primary" id="print-prescription">Imprimir Prescrição</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados das condições (mantenha os dados originais)
+        const conditionsData = {
+            pcr: {
+                name: "Parada Cardiorrespiratória / Instabilidade Hemodinâmica",
+                exam: `
+                    <div class="exam-field">
+                        <label>ABCDE Avaliado:</label>
+                        <select class="form-control">
+                            <option>Sim, completo</option>
+                            <option>Parcialmente</option>
+                            <option>Não realizado</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>Via Aérea:</label>
+                        <select class="form-control">
+                            <option>Patente</option>
+                            <option>Obstruída - necessita intervenção</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>Ventilação:</label>
+                        <select class="form-control">
+                            <option>Espontânea</option>
+                            <option>Assistida (BVM)</option>
+                            <option>Intubado</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>Circulação:</label>
+                        <select class="form-control">
+                            <option>Estável</option>
+                            <option>Instável - precisa suporte</option>
+                            <option>PCR em curso</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>PA (mmHg):</label>
+                        <input type="text" class="form-control" placeholder="Ex: 120/80">
+                    </div>
+                    <div class="exam-field">
+                        <label>FC (bpm):</label>
+                        <input type="number" class="form-control" placeholder="Ex: 80">
+                    </div>
+                    <div class="exam-field">
+                        <label>SatO2 (%):</label>
+                        <input type="number" class="form-control" placeholder="Ex: 98">
+                    </div>
+                `,
+                emergencyMeds: [
+                    "Adrenalina 1mg/ml (1:1000) - 0,3-0,5mg IM (anafilaxia)",
+                    "Adrenalina 1mg/10ml (1:10.000) - 1mg EV (PCR)",
+                    "Amiodarona 300mg EV (FA/TV)",
+                    "Atropina 1mg EV (bradicardia)",
+                    "Bicarbonato 8,4% 50ml EV (acidose)",
+                    "Dobutamina 250mg/250ml (choque cardiogênico)",
+                    "Dopamina 200mg/250ml (hipotensão)",
+                    "Noradrenalina 4mg/250ml (choque)"
+                ],
+                homePrescription: `
+                    <div class="prescription-card">
+                        <div class="prescription-title">Encaminhamento Hospitalar</div>
+                        <p>Paciente em instabilidade hemodinâmica requer internação em UTI.</p>
+                        <p><strong>Conduta:</strong> Transferência imediata para unidade de referência com suporte avançado.</p>
+                    </div>
+                `
+            },
+            sca: {
+                name: "Dor Torácica / SCA",
+                exam: `
+                    <div class="exam-field">
+                        <label>ECG realizado:</label>
+                        <select class="form-control">
+                            <option>Sim, normal</option>
+                            <option>Sim, alterado (SST)</option>
+                            <option>Sim, alterado (não SST)</option>
+                            <option>Não realizado</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>PA (mmHg):</label>
+                        <input type="text" class="form-control" placeholder="Ex: 120/80">
+                    </div>
+                    <div class="exam-field">
+                        <label>FC (bpm):</label>
+                        <input type="number" class="form-control" placeholder="Ex: 80">
+                    </div>
+                `,
+                emergencyMeds: [
+                    "AAS 100-300mg mastigável",
+                    "Clopidogrel 300mg ou Ticagrelor 180mg",
+                    "Nitroglicerina sublingual 0,4mg",
+                    "Morfina 2-4mg EV (se dor intensa)",
+                    "Enoxaparina 1mg/kg SC",
+                    "Metoprolol 5mg EV (se TA alta)"
+                ],
+                homePrescription: `
+                    <div class="prescription-card">
+                        <div class="prescription-title">Encaminhamento Hospitalar</div>
+                        <p>Paciente com SCA suspeita necessita internação em unidade coronariana.</p>
+                        <p><strong>Conduta:</strong> Transferência para hospital com hemodinâmica.</p>
+                    </div>
+                `
+            },
+            avc: {
+                name: "AVC Agudo",
+                exam: `
+                    <div class="exam-field">
+                        <label>NIHSS calculado:</label>
+                        <input type="number" class="form-control" placeholder="Pontuação NIHSS" id="nihss-score-input">
+                        <button class="btn btn-secondary" style="margin-top: 5px; width: 100%;" onclick="abrirCalculadoraNIHSS()">Calcular NIHSS</button>
+                    </div>
+                    <div class="exam-field">
+                        <label>Tempo desde início dos sintomas (LKW):</label>
+                        <select class="form-control">
+                            <option>≤ 4,5 horas</option>
+                            <option>4,5-24 horas</option>
+                            <option>> 24 horas</option>
+                            <option>Desconhecido</option>
+                        </select>
+                    </div>
+                    <div class="exam-field">
+                        <label>TC de crânio realizado:</label>
+                        <select class="form-control">
+                            <option>Sim, sem hemorragia</option>
+                            <option>Sim, com hemorragia</option>
+                            <option>Não disponível</option>
+                        </select>
+                    </div>
+                `,
+                emergencyMeds: [
+                    "rtPA (Alteplase) 0,9mg/kg (máx 90mg) - se elegível",
+                    "AAS 100-300mg/dia (após 24h se trombolisado)",
+                    "Clopidogrel 300mg carga (se AIT/AVC menor)",
+                    "Manitol 20% 100-200ml EV (se hipertensão intracraniana)",
+                    "Controle de PA: Labetalol, Nicardipina"
+                ],
+                homePrescription: `
+                    <div class="prescription-card">
+                        <div class="prescription-title">Encaminhamento para Unidade de AVC</div>
+                        <p>Paciente com AVC agudo requer internação em unidade especializada.</p>
+                        <p><strong>Conduta:</strong> Transferência para hospital com neurologia/neuroimagem.</p>
+                    </div>
+                `
+            }
+        };
+
+        // Dados dos fluxos interativos
+        const fluxosData = {
+            avc: {
+                titulo: "Fluxo AVC Agudo",
+                descricao: "Algoritmo para avaliação e manejo do AVC isquêmico agudo",
+                steps: [
+                    {
+                        id: 1,
+                        titulo: "Reconhecimento e Ativação",
+                        conteudo: "Suspeita de AVC (déficit focal súbito). Acione protocolo/código AVC. Registre <strong>LKW</strong> (último momento visto bem).",
+                        opcoes: [
+                            {texto: "Paciente com déficit focal agudo", acao: "next", valor: 2},
+                            {texto: "Tempo de LKW desconhecido", acao: "next", valor: 2},
+                            {texto: "Paciente já em deterioração", acao: "next", valor: 2}
+                        ]
+                    },
+                    {
+                        id: 2,
+                        titulo: "ABCDE + Glicemia Capilar",
+                        conteudo: "Avaliação inicial: Via aérea, respiração, circulação. Faça <strong>glicemia capilar</strong> imediata.",
+                        opcoes: [
+                            {texto: "Glicemia normal (70-180 mg/dL)", acao: "next", valor: 3},
+                            {texto: "Hipoglicemia (<70 mg/dL) - corrigir", acao: "calc", valor: "glicemia"},
+                            {texto: "Hiperglicemia (>180 mg/dL)", acao: "next", valor: 3}
+                        ],
+                        checklist: [
+                            "Via aérea patente",
+                            "SpO2 ≥ 94%",
+                            "PA medida",
+                            "Acesso venoso",
+                            "Glicemia realizada"
+                        ]
+                    },
+                    {
+                        id: 3,
+                        titulo: "Avaliação Neurológica (NIHSS)",
+                        conteudo: "Avalie NIHSS rapidamente. Escore NIHSS inicial:",
+                        score: {
+                            nome: "NIHSS",
+                            min: 0,
+                            max: 42,
+                            atual: 0,
+                            categorias: [
+                                {nome: "Nível de consciência", max: 3},
+                                {nome: "Desvio ocular", max: 2},
+                                {nome: "Campo visual", max: 3},
+                                {nome: "Paralisia facial", max: 3},
+                                {nome: "Força braço esquerdo", max: 4},
+                                {nome: "Força braço direito", max: 4},
+                                {nome: "Força perna esquerda", max: 4},
+                                {nome: "Força perna direita", max: 4},
+                                {nome: "Ataxia", max: 2},
+                                {nome: "Sensibilidade", max: 2},
+                                {nome: "Linguagem", max: 3},
+                                {nome: "Disartria", max: 2},
+                                {nome: "Extinção/negligência", max: 2}
+                            ]
+                        },
+                        opcoes: [
+                            {texto: "NIHSS ≤ 5 (leve)", acao: "score", valor: "leve"},
+                            {texto: "NIHSS 6-15 (moderado)", acao: "score", valor: "moderado"},
+                            {texto: "NIHSS > 15 (grave)", acao: "score", valor: "grave"},
+                            {texto: "Não sei calcular", acao: "calc", valor: "nihss"}
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Estado da aplicação
+        let currentCondition = null;
+        let currentTab = 'patient';
+        let medicoLogado = null;
+        let currentFluxo = null;
+        let fluxoStep = 0;
+        let fluxoData = {};
+
+        // Elementos DOM - CORREÇÃO: usando querySelector para garantir que os elementos existam
+        const loginModal = document.getElementById('loginModal');
+        const mainApp = document.getElementById('mainApp');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const currentUserName = document.getElementById('currentUserName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentTimeDiv = document.getElementById('current-time');
+        const fluxoInterativo = document.getElementById('fluxo-interativo');
+        const calculadoraNIHSS = document.getElementById('calculadoraNIHSS');
+        const nihssCalculadoraBody = document.getElementById('nihssCalculadoraBody');
+        const nihssResultado = document.getElementById('nihssResultado');
+        const nihssTotal = document.getElementById('nihssTotal');
+        const nihssClassificacao = document.getElementById('nihssClassificacao');
+
+        // Funções de login/logout
+        function verificarLogin() {
+            const medicoSalvo = localStorage.getItem('medicoLogadoEmergencia');
+            if (medicoSalvo) {
+                medicoLogado = JSON.parse(medicoSalvo);
+                mostrarApp();
+            } else {
+                mostrarLogin();
+            }
+        }
+
+        function mostrarLogin() {
+            if (loginModal) loginModal.classList.add('active');
+            if (mainApp) mainApp.style.display = 'none';
+        }
+
+        function mostrarApp() {
+            if (loginModal) loginModal.classList.remove('active');
+            if (mainApp) mainApp.style.display = 'block';
+            if (currentUserName) currentUserName.textContent = medicoLogado.nome;
+            initApp();
+        }
+
+        function fazerLogin(nome, crm) {
+            if (nome && crm) {
+                medicoLogado = {
+                    nome: nome,
+                    crm: crm,
+                    dataLogin: new Date().toISOString()
+                };
+                localStorage.setItem('medicoLogadoEmergencia', JSON.stringify(medicoLogado));
+                mostrarApp();
+                return true;
+            }
+            return false;
+        }
+
+        function fazerLogout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                localStorage.removeItem('medicoLogadoEmergencia');
+                medicoLogado = null;
+                mostrarLogin();
+                resetarFormularios();
+            }
+        }
+
+        // Eventos de login/logout
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const nome = document.getElementById('loginNome').value.trim();
+                const crm = document.getElementById('loginCRM').value.trim();
+                
+                if (fazerLogin(nome, crm)) {
+                    if (loginError) loginError.style.display = 'none';
+                    loginForm.reset();
+                } else {
+                    if (loginError) loginError.style.display = 'block';
+                }
+            });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', fazerLogout);
+        }
+
+        // Funções dos fluxos interativos
+        function iniciarFluxo(tipo) {
+            currentFluxo = tipo;
+            fluxoStep = 0;
+            fluxoData = {
+                score: 0,
+                respostas: [],
+                tempoInicio: new Date()
+            };
+            
+            // Esconder a grid de fluxos e mostrar o fluxo interativo
+            const fluxoGrid = document.querySelector('.fluxo-grid');
+            if (fluxoGrid) fluxoGrid.style.display = 'none';
+            if (fluxoInterativo) {
+                fluxoInterativo.style.display = 'block';
+                carregarStepFluxo();
+            }
+        }
+
+        function carregarStepFluxo() {
+            const fluxo = fluxosData[currentFluxo];
+            if (!fluxo || !fluxo.steps[fluxoStep]) {
+                finalizarFluxo();
+                return;
+            }
+            
+            const step = fluxo.steps[fluxoStep];
+            
+            let html = `
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-title">${step.titulo}</div>
+                        <div class="step-number">${step.id}</div>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-text">${step.conteudo}</div>
+                        
+                        ${step.score ? `
+                            <div class="score-display">
+                                <div>
+                                    <div class="score-label">${step.score.nome}</div>
+                                    <div class="score-value">${fluxoData.score}</div>
+                                </div>
+                                <button class="step-btn secondary" onclick="abrirCalculadoraScore('${currentFluxo}')">Calcular</button>
+                            </div>
+                        ` : ''}
+                        
+                        ${step.checklist ? `
+                            <div class="checklist">
+                                ${step.checklist.map(item => `
+                                    <div class="checklist-item">
+                                        <input type="checkbox" id="check-${step.id}-${item.substring(0,10).replace(/\s/g, '-')}">
+                                        <label for="check-${step.id}-${item.substring(0,10).replace(/\s/g, '-')}">${item}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="step-options">
+                        ${step.opcoes.map((opcao, index) => `
+                            <div class="step-option" onclick="selecionarOpcaoFluxo(${index})" data-index="${index}">
+                                ${opcao.texto}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="step-actions">
+                        <button class="step-btn secondary" onclick="voltarStepFluxo()" ${fluxoStep === 0 ? 'disabled' : ''}>
+                            ⬅️ Voltar
+                        </button>
+                        <button class="step-btn primary" onclick="avancarStepFluxo()" id="btn-avancar" disabled>
+                            Avançar ➡️
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            if (fluxoInterativo) {
+                fluxoInterativo.innerHTML = html;
+            }
+        }
+
+        function selecionarOpcaoFluxo(index) {
+            // Remove seleção anterior
+            document.querySelectorAll('.step-option').forEach(op => {
+                op.classList.remove('selected');
+            });
+            
+            // Adiciona seleção atual
+            const opcoes = document.querySelectorAll('.step-option');
+            if (opcoes[index]) {
+                opcoes[index].classList.add('selected');
+                const btnAvancar = document.getElementById('btn-avancar');
+                if (btnAvancar) btnAvancar.disabled = false;
+                
+                // Armazena a resposta
+                const fluxo = fluxosData[currentFluxo];
+                const step = fluxo.steps[fluxoStep];
+                fluxoData.respostas[fluxoStep] = step.opcoes[index];
+            }
+        }
+
+        function avancarStepFluxo() {
+            const opcaoSelecionada = document.querySelector('.step-option.selected');
+            if (!opcaoSelecionada) {
+                alert('Por favor, selecione uma opção antes de avançar.');
+                return;
+            }
+            
+            const fluxo = fluxosData[currentFluxo];
+            const step = fluxo.steps[fluxoStep];
+            const opcaoIndex = parseInt(opcaoSelecionada.dataset.index);
+            const opcao = step.opcoes[opcaoIndex];
+            
+            // Processa a ação da opção
+            switch(opcao.acao) {
+                case 'next':
+                    if (typeof opcao.valor === 'number') {
+                        fluxoStep = opcao.valor - 1;
+                    } else {
+                        fluxoStep++;
+                    }
+                    break;
+                case 'score':
+                    // Atualiza score baseado na seleção
+                    if (opcao.valor === 'leve') fluxoData.score = 5;
+                    else if (opcao.valor === 'moderado') fluxoData.score = 10;
+                    else if (opcao.valor === 'grave') fluxoData.score = 20;
+                    fluxoStep++;
+                    break;
+                case 'calc':
+                    if (opcao.valor === 'nihss') {
+                        abrirCalculadoraNIHSS();
+                        return;
+                    }
+                    fluxoStep++;
+                    break;
+                default:
+                    fluxoStep++;
+            }
+            
+            if (fluxoStep >= fluxo.steps.length) {
+                finalizarFluxo();
+            } else {
+                carregarStepFluxo();
+            }
+        }
+
+        function voltarStepFluxo() {
+            if (fluxoStep > 0) {
+                fluxoStep--;
+                carregarStepFluxo();
+            }
+        }
+
+        function finalizarFluxo() {
+            const tempoTotal = Math.round((new Date() - fluxoData.tempoInicio) / 60000);
+            
+            let html = `
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-title">Fluxo Concluído</div>
+                        <div class="step-number">✓</div>
+                    </div>
+                    
+                    <div class="step-content">
+                        <div class="score-display">
+                            <div>
+                                <div class="score-label">Tempo total</div>
+                                <div class="score-value">${tempoTotal} min</div>
+                            </div>
+                            <div>
+                                <div class="score-label">NIHSS final</div>
+                                <div class="score-value">${fluxoData.score}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-text">
+                            <h4>Resumo das decisões:</h4>
+                            <ul>
+                                ${fluxoData.respostas.map((r, i) => r ? `<li>${r.texto}</li>` : '').join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step-actions">
+                        <button class="step-btn secondary" onclick="reiniciarFluxo()">
+                            🔄 Reiniciar Fluxo
+                        </button>
+                        <button class="step-btn primary" onclick="voltarParaGrid()">
+                            ⬅️ Voltar para Fluxos
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            if (fluxoInterativo) {
+                fluxoInterativo.innerHTML = html;
+            }
+        }
+
+        function reiniciarFluxo() {
+            iniciarFluxo(currentFluxo);
+        }
+
+        function voltarParaGrid() {
+            if (fluxoInterativo) fluxoInterativo.style.display = 'none';
+            const fluxoGrid = document.querySelector('.fluxo-grid');
+            if (fluxoGrid) fluxoGrid.style.display = 'grid';
+        }
+
+        function abrirCalculadoraScore(tipo) {
+            if (tipo === 'avc') {
+                abrirCalculadoraNIHSS();
+            } else {
+                alert('Calculadora para este fluxo em desenvolvimento');
+            }
+        }
+
+        // Calculadora NIHSS
+        function abrirCalculadoraNIHSS() {
+            if (!nihssCalculadoraBody) return;
+            
+            nihssCalculadoraBody.innerHTML = `
+                <div class="calculadora-group">
+                    <label for="q1a">1a. Nível de Consciência:
+                        <span class="tooltip" title="Avalia se o paciente está alerta, sonolento, obtuso ou comatoso. Um 3 é dado se não há resposta a estímulo doloroso.">🛈</span>
+                    </label>
+                    <select id="q1a">
+                        <option value="0">0 - Alerta</option>
+                        <option value="1">1 - Sonolento</option>
+                        <option value="2">2 - Obtuso</option>
+                        <option value="3">3 - Comatoso</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q1b">1b. Perguntas sobre Consciência:
+                        <span class="tooltip" title="Paciente é perguntado sobre mês e idade. Deve responder corretamente sem ajuda. Afásicos ou com barreiras recebem 2.">🛈</span>
+                    </label>
+                    <select id="q1b">
+                        <option value="0">0 - Ambas corretas</option>
+                        <option value="1">1 - Uma correta</option>
+                        <option value="2">2 - Nenhuma correta</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q1c">1c. Comandos Simples:
+                        <span class="tooltip" title="Paciente deve abrir/fechar os olhos e a mão não parética. Vale tentativas mesmo sem completar devido à fraqueza.">🛈</span>
+                    </label>
+                    <select id="q1c">
+                        <option value="0">0 - Ambos corretos</option>
+                        <option value="1">1 - Um correto</option>
+                        <option value="2">2 - Nenhum</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q2">2. Olhos (Desvio do olhar):
+                        <span class="tooltip" title="Apenas os movimentos oculares horizontais são testados. Paralisia parcial recebe 1; desvio forçado ou paralisia total, 2.">🛈</span>
+                    </label>
+                    <select id="q2">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Paralisia parcial</option>
+                        <option value="2">2 - Desvio forçado</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q3">3. Campos Visuais:
+                        <span class="tooltip" title="Testa os quatro quadrantes visuais. Hemianopsia parcial = 1, completa = 2, bilateral ou cegueira = 3.">🛈</span>
+                    </label>
+                    <select id="q3">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Hemianopsia parcial</option>
+                        <option value="2">2 - Hemianopsia completa</option>
+                        <option value="3">3 - Hemianopsia bilateral</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q4">4. Paralisia Facial:
+                        <span class="tooltip" title="Paciente deve sorrir e fechar os olhos. Assimetria leve = 1, paralisia inferior = 2, completa = 3.">🛈</span>
+                    </label>
+                    <select id="q4">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Assimetria sutil</option>
+                        <option value="2">2 - Paralisia parcial</option>
+                        <option value="3">3 - Paralisia completa</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q5a">5a. Força no Braço Direito:
+                        <span class="tooltip" title="Braço em 90º (sentado) ou 45º (deitado). Avalia se o braço cai em até 10s. Queda leve = 1, contra gravidade = 2, sem resistência = 3, nenhum movimento = 4.">🛈</span>
+                    </label>
+                    <select id="q5a">
+                        <option value="0">0 - Sem queda</option>
+                        <option value="1">1 - Queda mínima</option>
+                        <option value="2">2 - Contra gravidade</option>
+                        <option value="3">3 - Cai imediatamente</option>
+                        <option value="4">4 - Sem movimento</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q5b">5b. Força no Braço Esquerdo:
+                        <span class="tooltip" title="Mesma avaliação do braço direito, realizada separadamente.">🛈</span>
+                    </label>
+                    <select id="q5b">
+                        <option value="0">0 - Sem queda</option>
+                        <option value="1">1 - Queda mínima</option>
+                        <option value="2">2 - Contra gravidade</option>
+                        <option value="3">3 - Cai imediatamente</option>
+                        <option value="4">4 - Sem movimento</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q6a">6a. Força na Perna Direita:
+                        <span class="tooltip" title="Perna em extensão a 30º, avalia se há queda antes de 5s. Critérios similares aos dos braços.">🛈</span>
+                    </label>
+                    <select id="q6a">
+                        <option value="0">0 - Sem queda</option>
+                        <option value="1">1 - Queda mínima</option>
+                        <option value="2">2 - Contra gravidade</option>
+                        <option value="3">3 - Cai imediatamente</option>
+                        <option value="4">4 - Sem movimento</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q6b">6b. Força na Perna Esquerda:
+                        <span class="tooltip" title="Mesma avaliação da perna direita.">🛈</span>
+                    </label>
+                    <select id="q6b">
+                        <option value="0">0 - Sem queda</option>
+                        <option value="1">1 - Queda mínima</option>
+                        <option value="2">2 - Contra gravidade</option>
+                        <option value="3">3 - Cai imediatamente</option>
+                        <option value="4">4 - Sem movimento</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q7">7. Coordenação (Ataxia):
+                        <span class="tooltip" title="Testa presença de ataxia cerebelar com testes dedo-nariz e calcanhar-joelho. Deve ser desproporcional à fraqueza.">🛈</span>
+                    </label>
+                    <select id="q7">
+                        <option value="0">0 - Sem ataxia</option>
+                        <option value="1">1 - Em um membro</option>
+                        <option value="2">2 - Em dois membros</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q8">8. Sensibilidade:
+                        <span class="tooltip" title="Avalia perda sensitiva atribuída ao AVC. Beliscar face, tronco e membros para detectar perda leve (1) ou total (2).">🛈</span>
+                    </label>
+                    <select id="q8">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Perda leve</option>
+                        <option value="2">2 - Perda severa</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q9">9. Linguagem:
+                        <span class="tooltip" title="Paciente deve nomear objetos, descrever uma figura e repetir frases. Afasia leve = 1, severa = 2, mudo = 3.">🛈</span>
+                    </label>
+                    <select id="q9">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Afasia leve</option>
+                        <option value="2">2 - Afasia severa</option>
+                        <option value="3">3 - Mudo</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q10">10. Disartria:
+                        <span class="tooltip" title="Avalia clareza da fala. Leve = entendível com esforço. Grave = ininteligível ou anártrico.">🛈</span>
+                    </label>
+                    <select id="q10">
+                        <option value="0">0 - Normal</option>
+                        <option value="1">1 - Leve</option>
+                        <option value="2">2 - Grave</option>
+                    </select>
+                </div>
+                <div class="calculadora-group">
+                    <label for="q11">11. Negligência (Extinção):
+                        <span class="tooltip" title="Testa se o paciente ignora estímulos em um lado do corpo. Estímulo simultâneo visual ou tátil. Hemi-inatenção profunda = 2.">🛈</span>
+                    </label>
+                    <select id="q11">
+                        <option value="0">0 - Sem negligência</option>
+                        <option value="1">1 - Leve</option>
+                        <option value="2">2 - Grave</option>
+                    </select>
+                </div>
+            `;
+            
+            if (calculadoraNIHSS) {
+                calculadoraNIHSS.classList.add('active');
+                if (nihssResultado) nihssResultado.style.display = 'none';
+            }
+        }
+
+        function fecharCalculadoraNIHSS() {
+            if (calculadoraNIHSS) {
+                calculadoraNIHSS.classList.remove('active');
+            }
+        }
+
+        function calcularNIHSS() {
+            let total = 0;
+            const ids = [
+                'q1a', 'q1b', 'q1c',
+                'q2', 'q3', 'q4',
+                'q5a', 'q5b',
+                'q6a', 'q6b',
+                'q7', 'q8', 'q9', 'q10', 'q11'
+            ];
+            
+            ids.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    total += parseInt(element.value);
+                }
+            });
+
+            let interpretacao = '';
+            if (total === 0) interpretacao = 'Sem AVC';
+            else if (total <= 4) interpretacao = 'AVC leve';
+            else if (total <= 15) interpretacao = 'AVC moderado';
+            else if (total <= 20) interpretacao = 'AVC moderado a grave';
+            else interpretacao = 'AVC grave';
+
+            if (nihssTotal) nihssTotal.textContent = total;
+            if (nihssClassificacao) nihssClassificacao.textContent = interpretacao;
+            if (nihssResultado) nihssResultado.style.display = 'block';
+            
+            // Se estiver no fluxo AVC, atualiza o score
+            if (currentFluxo === 'avc') {
+                fluxoData.score = total;
+                // Atualiza também o input na aba de prescrição se estiver aberto
+                const nihssInput = document.getElementById('nihss-score-input');
+                if (nihssInput) {
+                    nihssInput.value = total;
+                }
+            }
+            
+            // Rolar para o resultado
+            if (nihssResultado) {
+                nihssResultado.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function verResumo(tipo) {
+            const fluxo = fluxosData[tipo];
+            alert(`Resumo do Fluxo: ${fluxo.titulo}\n\n${fluxo.descricao}\n\nTotal de passos: ${fluxo.steps.length}`);
+        }
+
+        // Funções originais da aplicação
+        function initApp() {
+            if (!medicoLogado) return;
+            
+            updateCurrentTime();
+            initEvents();
+            
+            console.log('Sistema de Emergência inicializado para:', medicoLogado.nome);
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const dateString = now.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            if (currentTimeDiv) {
+                currentTimeDiv.textContent = `${dateString} ${timeString}`;
+            }
+        }
+
+        function resetarFormularios() {
+            const patientNameInput = document.getElementById('patient-name');
+            const patientDobInput = document.getElementById('patient-dob');
+            const patientAgeInput = document.getElementById('patient-age');
+            const patientSusInput = document.getElementById('patient-sus');
+            const patientGenderSelect = document.getElementById('patient-gender');
+            
+            if (patientNameInput) patientNameInput.value = '';
+            if (patientDobInput) patientDobInput.value = '';
+            if (patientAgeInput) patientAgeInput.value = '';
+            if (patientSusInput) patientSusInput.value = '';
+            if (patientGenderSelect) patientGenderSelect.value = '';
+            
+            const conditionCards = document.querySelectorAll('.condition-card');
+            if (conditionCards) {
+                conditionCards.forEach(card => {
+                    card.classList.remove('selected');
+                });
+            }
+            
+            currentCondition = null;
+            currentTab = 'patient';
+            switchTab('patient');
+            
+            const specificExamDiv = document.getElementById('specific-exam');
+            if (specificExamDiv) {
+                specificExamDiv.innerHTML = `
+                    <p class="alert-box alert-info">
+                        <span class="icon">ℹ️</span>
+                        Selecione uma condição clínica na aba anterior para visualizar o exame físico específico e as prescrições.
+                    </p>`;
+            }
+                
+            const homePrescriptionDiv = document.getElementById('home-prescription');
+            if (homePrescriptionDiv) {
+                homePrescriptionDiv.innerHTML = `
+                    <p class="alert-box alert-info">
+                        <span class="icon">ℹ️</span>
+                        Selecione uma condição clínica para visualizar a prescrição para alta.
+                    </p>`;
+            }
+            
+            const emergencyMedsDiv = document.getElementById('emergency-medications');
+            if (emergencyMedsDiv) {
+                emergencyMedsDiv.innerHTML = '';
+            }
+            
+            // Resetar fluxo se estiver aberto
+            if (fluxoInterativo) {
+                voltarParaGrid();
+            }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Remove active de todas as tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Adiciona active na tab clicada
+            const activeTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // Remove active de todos os conteúdos
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Adiciona active no conteúdo correspondente
+            const activeContent = document.getElementById(`${tabName}-tab`);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+            
+            // Se for a aba de prescrição, atualiza os dados
+            if (tabName === 'prescription') {
+                updatePrescriptionTab();
+            }
+            
+            // Se for a aba de condutas, garante que a grid esteja visível
+            if (tabName === 'condutas' && fluxoInterativo) {
+                voltarParaGrid();
+            }
+        }
+
+        function selectCondition(conditionId) {
+            // Remove seleção de todas as condições
+            const conditionCards = document.querySelectorAll('.condition-card');
+            conditionCards.forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Adiciona seleção na condição clicada
+            const selectedCard = document.querySelector(`[data-condition="${conditionId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            currentCondition = conditionId;
+            
+            // Se estiver na aba de prescrição, atualiza imediatamente
+            if (currentTab === 'prescription') {
+                updatePrescriptionTab();
+            }
+        }
+
+        function updatePrescriptionTab() {
+            const specificExamDiv = document.getElementById('specific-exam');
+            const homePrescriptionDiv = document.getElementById('home-prescription');
+            const emergencyMedsDiv = document.getElementById('emergency-medications');
+            
+            if (!currentCondition || !conditionsData[currentCondition]) {
+                if (specificExamDiv) {
+                    specificExamDiv.innerHTML = `
+                        <p class="alert-box alert-info">
+                            <span class="icon">ℹ️</span>
+                            Selecione uma condição clínica na aba anterior para visualizar o exame físico específico e as prescrições.
+                        </p>`;
+                }
+                if (homePrescriptionDiv) {
+                    homePrescriptionDiv.innerHTML = `
+                        <p class="alert-box alert-info">
+                            <span class="icon">ℹ️</span>
+                            Selecione uma condição clínica para visualizar a prescrição para alta.
+                        </p>`;
+                }
+                if (emergencyMedsDiv) {
+                    emergencyMedsDiv.innerHTML = '';
+                }
+                return;
+            }
+            
+            const condition = conditionsData[currentCondition];
+            
+            if (specificExamDiv) {
+                specificExamDiv.innerHTML = `
+                    <div class="alert-box alert-info">
+                        <span class="icon">ℹ️</span>
+                        <strong>${condition.name}</strong> - Exame Físico Específico
+                    </div>
+                    ${condition.exam}`;
+            }
+            
+            if (emergencyMedsDiv) {
+                emergencyMedsDiv.innerHTML = '';
+                condition.emergencyMeds.forEach(med => {
+                    const medDiv = document.createElement('div');
+                    medDiv.className = 'emergency-med';
+                    medDiv.textContent = med;
+                    emergencyMedsDiv.appendChild(medDiv);
+                });
+            }
+            
+            if (homePrescriptionDiv) {
+                homePrescriptionDiv.innerHTML = condition.homePrescription;
+            }
+        }
+
+        function calculateAge() {
+            const patientDobInput = document.getElementById('patient-dob');
+            const patientAgeInput = document.getElementById('patient-age');
+            
+            if (!patientDobInput || !patientDobInput.value || !patientAgeInput) return;
+            
+            const birthDate = new Date(patientDobInput.value);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            patientAgeInput.value = age;
+        }
+
+        function printPrescription() {
+            if (!currentCondition) {
+                alert('Selecione uma condição clínica antes de imprimir a prescrição.');
+                return;
+            }
+            
+            const condition = conditionsData[currentCondition];
+            const patientNameInput = document.getElementById('patient-name');
+            const patientAgeInput = document.getElementById('patient-age');
+            const patientSusInput = document.getElementById('patient-sus');
+            const patientGenderSelect = document.getElementById('patient-gender');
+            
+            const patientName = patientNameInput ? patientNameInput.value || '[NÃO INFORMADO]' : '[NÃO INFORMADO]';
+            const patientAge = patientAgeInput ? patientAgeInput.value || '[NÃO INFORMADO]' : '[NÃO INFORMADO]';
+            const patientSus = patientSusInput ? patientSusInput.value || '[NÃO INFORMADO]' : '[NÃO INFORMADO]';
+            const patientGender = patientGenderSelect ? patientGenderSelect.value || '[NÃO INFORMADO]' : '[NÃO INFORMADO]';
+            const genderText = patientGender === 'male' ? 'Masculino' : 
+                             patientGender === 'female' ? 'Feminino' : 
+                             '[NÃO INFORMADO]';
+            
+            const medicoNome = medicoLogado ? medicoLogado.nome : '[MÉDICO NÃO IDENTIFICADO]';
+            const medicoCRM = medicoLogado ? medicoLogado.crm : '[CRM NÃO INFORMADO]';
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Prescrição Médica - ${patientName}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                        .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        .patient-info { margin-bottom: 30px; }
+                        .section { margin-bottom: 25px; }
+                        .section-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                        .medication { margin-bottom: 15px; }
+                        .medication-name { font-weight: bold; }
+                        .footer { margin-top: 50px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 12px; }
+                        @media print {
+                            body { margin: 20px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Prescrição Médica - Emergência</h1>
+                        <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Médico:</strong> ${medicoNome} - ${medicoCRM}</p>
+                    </div>
+                    
+                    <div class="patient-info">
+                        <h2>Dados do Paciente</h2>
+                        <p><strong>Nome:</strong> ${patientName}</p>
+                        <p><strong>Idade:</strong> ${patientAge} anos</p>
+                        <p><strong>Sexo:</strong> ${genderText}</p>
+                        <p><strong>SUS:</strong> ${patientSus}</p>
+                        <p><strong>Condição:</strong> ${condition.name}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Medicamentos para Uso na Emergência</div>
+                        ${condition.emergencyMeds.map(med => `
+                            <div class="medication">
+                                <div class="medication-name">${med}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Prescrição para Alta / Ambulatorial</div>
+                        ${condition.homePrescription.replace(/<[^>]*>/g, '')}
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Prescrição gerada pelo Sistema de Apoio à Decisão - Emergência</p>
+                        <p>Baseado no protocolo "Plantão Rápido"</p>
+                        <p>Médico responsável: ${medicoNome} - ${medicoCRM}</p>
+                    </div>
+                    
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() {
+                                window.close();
+                            }, 1000);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function initEvents() {
+            // Navegação entre abas via botões
+            const nextToConditionBtn = document.getElementById('next-to-condition');
+            const backToPatientBtn = document.getElementById('back-to-patient');
+            const nextToCondutasBtn = document.getElementById('next-to-condutas');
+            const backToConditionCondutasBtn = document.getElementById('back-to-condition-condutas');
+            const nextToPrescriptionCondutasBtn = document.getElementById('next-to-prescription-condutas');
+            const backToCondutasBtn = document.getElementById('back-to-condutas');
+            const printPrescriptionBtn = document.getElementById('print-prescription');
+            const newPatientBtn = document.getElementById('new-patient');
+            
+            if (nextToConditionBtn) {
+                nextToConditionBtn.addEventListener('click', () => {
+                    switchTab('condition');
+                });
+            }
+            
+            if (backToPatientBtn) {
+                backToPatientBtn.addEventListener('click', () => {
+                    switchTab('patient');
+                });
+            }
+            
+            if (nextToCondutasBtn) {
+                nextToCondutasBtn.addEventListener('click', () => {
+                    switchTab('condutas');
+                });
+            }
+            
+            if (backToConditionCondutasBtn) {
+                backToConditionCondutasBtn.addEventListener('click', () => {
+                    switchTab('condition');
+                });
+            }
+            
+            if (nextToPrescriptionCondutasBtn) {
+                nextToPrescriptionCondutasBtn.addEventListener('click', () => {
+                    if (!currentCondition) {
+                        alert('Por favor, selecione uma condição clínica antes de prosseguir.');
+                        return;
+                    }
+                    switchTab('prescription');
+                    updatePrescriptionTab();
+                });
+            }
+            
+            if (backToCondutasBtn) {
+                backToCondutasBtn.addEventListener('click', () => {
+                    switchTab('condutas');
+                });
+            }
+            
+            // Eventos de clique nas tabs
+            const tabs = document.querySelectorAll('.tab');
+            if (tabs.length > 0) {
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const tabName = this.dataset.tab;
+                        if (tabName === 'prescription' && !currentCondition) {
+                            alert('Por favor, selecione uma condição clínica antes de acessar as prescrições.');
+                            return;
+                        }
+                        switchTab(tabName);
+                    });
+                });
+            }
+            
+            // Seleção de condições clínicas
+            const conditionCards = document.querySelectorAll('.condition-card');
+            if (conditionCards.length > 0) {
+                conditionCards.forEach(card => {
+                    card.addEventListener('click', function() {
+                        const conditionId = this.dataset.condition;
+                        selectCondition(conditionId);
+                    });
+                });
+            }
+            
+            // Calcular idade automaticamente
+            const patientDobInput = document.getElementById('patient-dob');
+            if (patientDobInput) {
+                patientDobInput.addEventListener('change', calculateAge);
+            }
+            
+            // Botões de ação
+            if (printPrescriptionBtn) {
+                printPrescriptionBtn.addEventListener('click', printPrescription);
+            }
+            
+            if (newPatientBtn) {
+                newPatientBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (confirm('Deseja limpar os dados e iniciar um novo paciente?')) {
+                        resetarFormularios();
+                    }
+                });
+            }
+            
+            // Adicionar event listeners para os botões dos fluxos
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('fluxo-btn')) {
+                    if (e.target.textContent.includes('Iniciar Fluxo')) {
+                        const fluxoCard = e.target.closest('.fluxo-card');
+                        if (fluxoCard) {
+                            const fluxoType = fluxoCard.dataset.fluxo;
+                            iniciarFluxo(fluxoType);
+                        }
+                    }
+                }
+            });
+            
+            // Atualizar hora a cada segundo
+            setInterval(updateCurrentTime, 1000);
+        }
+
+        // Inicializar verificação de login
+        document.addEventListener('DOMContentLoaded', verificarLogin);
+    </script>
+</body>
+</html>

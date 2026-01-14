@@ -1,0 +1,58 @@
+{
+  "usuarios": [
+    {
+      "username": "demo",
+      "password": "medico123",
+      "nome": "Usuário Demonstração",
+      "crm": "CRM:  ",
+      "licenca_valida": true,
+      "email": "demo@sismed.com",
+      "tipo": "demonstracao"
+    },
+    {
+      "username": "dr.homero",
+      "password": "sismed2023",
+      "nome": "Dr. Homero Pereira",
+      "crm": "CRM-MA: 16XXX",
+      "licenca_valida": true,
+      "email": "homeropereira@outlook.com",
+      "tipo": "desenvolvedor"
+    },
+    {
+      "username": "teste",
+      "password": "teste123",
+      "nome": "Usuário Teste",
+      "crm": "CRM-TESTE: 00000",
+      "licenca_valida": false,
+      "email": "teste@sismed.com",
+      "tipo": "avaliacao"
+    },
+    {
+      "username": "medico",
+      "password": "clinica2023",
+      "nome": "Médico Clínico",
+      "crm": "CRM: 12345",
+      "licenca_valida": true,
+      "email": "medico@clinica.com",
+      "tipo": "profissional"
+    },
+        {
+      "username": "clara",
+      "password": "1234",
+      "nome": "Dra Clara",
+      "crm": "CRM: 12990",
+      "licenca_valida": true,
+      "email": "medico@clinica.com",
+      "tipo": "profissional"
+    },
+    {
+      "username": "olivia",
+      "password": "1234",
+      "nome": "Dra Olivia de Alencar",
+      "crm": "CRM: 12345",
+      "licenca_valida": true,
+      "email": "medico@clinica.com",
+      "tipo": "profissional"
+    }
+  ]
+}
