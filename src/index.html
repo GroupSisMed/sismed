@@ -1,222 +1,628 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SisEd - Login</title>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Usuários</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
     
-    <!-- Estilos -->
-    <link rel="stylesheet" href="../assets/styles/style.css">
-    <link rel="stylesheet" href="../assets/styles/auth.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
     
-    <style>
-        /* Estilos específicos para a página de login */
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e3a8a;
-            --secondary: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --light: #f8fafc;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --gray-light: #e2e8f0;
-        }
-    </style>
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+    }
+    
+    .status-bar {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 5px solid #3498db;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 10px;
+      border: 1px solid #e9ecef;
+    }
+    
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dee2e6;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #495057;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #1f639b 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+    }
+    
+    .users-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    
+    .user-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #3498db;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 18px;
+    }
+    
+    .user-details {
+      margin-top: 5px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+    
+    .user-id {
+      font-family: monospace;
+      background: #eee;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .user-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #7f8c8d;
+    }
+    
+    .message {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      display: none;
+    }
+    
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    
+    .message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+      display: block;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border-top: 4px solid #3498db;
+    }
+    
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 10px 0;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body class="auth-container">
+<body>
+  <div class="container">
+    <h1>👥 Gerenciador de Usuários</h1>
+    <p class="subtitle">Banco de dados usando Google Sheets</p>
     
-    <div class="auth-box">
-        <!-- Logo -->
-        <div class="auth-logo">
-            <img src="../assets/images/LOGOMA.jpg" alt="SisEd Logo">
-            <h1>SisEd</h1>
-            <p>Sistema de Prescrição Médica</p>
-        </div>
-        
-        <!-- Mensagens de erro/sucesso -->
-        <div id="authMessage" class="auth-message error" style="display: none;">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="messageText">Mensagem de erro</span>
-        </div>
-        
-        <!-- Formulário de login -->
-        <form id="loginForm" class="auth-form">
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-user"></i> Usuário
-                </label>
-                <div class="input-group">
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" 
-                           id="username" 
-                           class="form-control" 
-                           placeholder="Digite seu usuário" 
-                           required
-                           autocomplete="username">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-lock"></i> Senha
-                </label>
-                <div class="input-group">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password" 
-                           id="password" 
-                           class="form-control" 
-                           placeholder="Digite sua senha" 
-                           required
-                           autocomplete="current-password">
-                    <button type="button" 
-                            class="toggle-password" 
-                            onclick="togglePasswordVisibility()">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Checkbox lembrar-me -->
-            <label class="auth-checkbox">
-                <input type="checkbox" id="rememberMe">
-                <span class="checkmark"></span>
-                <span>Lembrar-me neste computador</span>
-            </label>
-            
-            <!-- Botão de login -->
-            <button type="submit" class="auth-submit" id="loginButton">
-                <i class="fas fa-sign-in-alt"></i>
-                Entrar no Sistema
-            </button>
-        </form>
-        
-        <!-- Links adicionais -->
-        <div class="auth-links">
-            <a href="#" onclick="showRecovery()">
-                <i class="fas fa-key"></i> Esqueci minha senha
-            </a>
-            <a href="#" onclick="showSupport()">
-                <i class="fas fa-question-circle"></i> Ajuda
-            </a>
-        </div>
-        
-        <!-- Footer -->
-        <div class="auth-footer">
-            <p>© 2024 SisEd - Sistema de Prescrição Médica</p>
-            <p>Versão 1.0.0 • Desenvolvido para uso médico</p>
-        </div>
+    <div class="status-bar">
+      <div>
+        <strong>Status:</strong>
+        <span id="apiStatus" style="color: #e74c3c;">❌ Desconectado</span>
+      </div>
+      <button onclick="checkConnection()" class="btn-primary">
+        Testar Conexão
+      </button>
     </div>
     
-    <!-- Versão -->
-    <div class="auth-version">v1.0.0</div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="totalUsers">0</div>
+        <div>Usuários Totais</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="activeUsers">0</div>
+        <div>Usuários Ativos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">✓</div>
+        <div>Google Sheets</div>
+      </div>
+    </div>
     
-    <!-- Scripts -->
-    <script>
-        // Função para mostrar/ocultar senha
-        function togglePasswordVisibility() {
-            const passwordField = document.getElementById('password');
-            const toggleButton = document.querySelector('.toggle-password i');
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                toggleButton.className = 'fas fa-eye-slash';
-            } else {
-                passwordField.type = 'password';
-                toggleButton.className = 'fas fa-eye';
-            }
-        }
+    <div class="main-content">
+      <div class="section">
+        <h2>➕ Criar Usuário</h2>
+        <form id="userForm">
+          <div class="form-group">
+            <label for="username">Nome de Usuário *</label>
+            <input type="text" id="username" required placeholder="Ex: joao.silva">
+          </div>
+          <div class="form-group">
+            <label for="password">Senha *</label>
+            <input type="password" id="password" required placeholder="Mínimo 4 caracteres" minlength="4">
+          </div>
+          <button type="submit" class="btn-primary" id="submitBtn">
+            Criar Usuário
+          </button>
+        </form>
         
-        // Função para mostrar mensagens
-        function showMessage(text, type = 'error') {
-            const messageDiv = document.getElementById('authMessage');
-            const messageText = document.getElementById('messageText');
-            
-            messageDiv.className = `auth-message ${type}`;
-            messageText.textContent = text;
-            messageDiv.style.display = 'flex';
-            
-            // Auto-esconder após 5 segundos
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
-        }
+        <div style="margin-top: 30px;">
+          <h3>🔍 Verificar Disponibilidade</h3>
+          <div class="form-group">
+            <input type="text" id="checkUsername" placeholder="Digite um nome de usuário">
+          </div>
+          <button onclick="checkUser()" class="btn-success">
+            Verificar
+          </button>
+          <div id="checkResult" class="message"></div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2>📋 Usuários Cadastrados</h2>
+        <div style="margin-bottom: 15px;">
+          <button onclick="loadUsers()" class="btn-primary">
+            Atualizar Lista
+          </button>
+          <button onclick="deleteAllUsers()" class="btn-danger" style="margin-left: 10px;">
+            Limpar Todos
+          </button>
+        </div>
         
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        <div class="users-list" id="usersList">
+          <div class="empty-state">
+            <div style="font-size: 48px; color: #ddd; margin-bottom: 15px;">👥</div>
+            <h3>Nenhum usuário encontrado</h3>
+            <p>Adicione seu primeiro usuário</p>
+          </div>
+        </div>
+        
+        <div id="message" class="message"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Função para fazer requisições à API
+    async function callApi(action, data = {}) {
+      try {
+        let url = google.script.run;
+        
+        // Se for get_users ou check_username, usa GET
+        if (action === 'get_users' || action === 'check_username' || action === 'info') {
+          const params = new URLSearchParams();
+          params.append('action', action);
+          Object.keys(data).forEach(key => {
+            params.append(key, data[key]);
+          });
+          
+          url = google.script.run.withSuccessHandler(handleSuccess).withFailureHandler(handleError);
+          if (action === 'get_users') return url.getUsers();
+          if (action === 'check_username') return url.checkUsername({parameter: data});
+          if (action === 'info') return url.getApiInfo();
+        } else {
+          // Para outras ações, usa POST através do google.script.run
+          url = google.script.run.withSuccessHandler(handleSuccess).withFailureHandler(handleError);
+          if (action === 'register') return url.registerUser({parameter: data});
+          if (action === 'delete_user') return url.deleteUser({parameter: data});
+        }
+      } catch (error) {
+        handleError(error);
+      }
+    }
+    
+    // Manipuladores de resposta
+    function handleSuccess(response) {
+      console.log('Success:', response);
+      return response;
+    }
+    
+    function handleError(error) {
+      console.error('Error:', error);
+      showMessage('Erro: ' + error.message, 'error');
+    }
+    
+    // Funções da interface
+    function showMessage(text, type = 'info') {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = text;
+      messageDiv.className = 'message ' + type;
+      setTimeout(() => {
+        messageDiv.className = 'message';
+      }, 5000);
+    }
+    
+    async function checkConnection() {
+      const statusElement = document.getElementById('apiStatus');
+      try {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            statusElement.textContent = '✅ Conectado';
+            statusElement.style.color = '#27ae60';
+            showMessage('✅ API conectada com sucesso!', 'success');
+            loadUsers();
+          })
+          .withFailureHandler(function(error) {
+            statusElement.textContent = '❌ Erro de conexão';
+            statusElement.style.color = '#e74c3c';
+            showMessage('❌ Erro: ' + error.message, 'error');
+          })
+          .getApiInfo();
+      } catch (error) {
+        showMessage('Erro: ' + error.message, 'error');
+      }
+    }
+    
+    // Formulário de criação
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      
+      if (!username || !password) {
+        showMessage('Preencha todos os campos', 'error');
+        return;
+      }
+      
+      if (password.length < 4) {
+        showMessage('Senha deve ter no mínimo 4 caracteres', 'error');
+        return;
+      }
+      
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<div class="loading"></div> Criando...';
+      submitBtn.disabled = true;
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          showMessage('✅ Usuário criado com sucesso!', 'success');
+          document.getElementById('username').value = '';
+          document.getElementById('password').value = '';
+          loadUsers();
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        })
+        .withFailureHandler(function(error) {
+          showMessage('❌ Erro: ' + error.message, 'error');
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        })
+        .registerUser({parameter: {username: username, password: password}});
+    });
+    
+    // Carregar usuários
+    function loadUsers() {
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '<div class="empty-state"><div class="loading"></div> Carregando...</div>';
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.users.length === 0) {
+            usersList.innerHTML = `
+              <div class="empty-state">
+                <div style="font-size: 48px; color: #ddd; margin-bottom: 15px;">👥</div>
+                <h3>Nenhum usuário encontrado</h3>
+                <p>Adicione seu primeiro usuário</p>
+              </div>
+            `;
+            document.getElementById('totalUsers').textContent = '0';
+            document.getElementById('activeUsers').textContent = '0';
+            return;
+          }
+          
+          let html = '';
+          let activeCount = 0;
+          
+          response.users.forEach(user => {
+            if (user.status === 'active') activeCount++;
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            
-            // Validar campos
-            if (!username || !password) {
-                showMessage('Preencha todos os campos!', 'error');
-                return;
-            }
-            
-            // Mostrar loading
-            const loginBtn = document.getElementById('loginButton');
-            loginBtn.classList.add('loading');
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
-            
-            // Simular autenticação (substituir por API real)
-            setTimeout(() => {
-                // Usuários de teste
-                const usuariosValidos = [
-                    { usuario: 'medico', senha: '123456', nome: 'Dr. João Silva', nivel: 'medico' },
-                    { usuario: 'enfermeiro', senha: '123456', nome: 'Enf. Maria Santos', nivel: 'enfermeiro' },
-                    { usuario: 'admin', senha: 'admin123', nome: 'Administrador', nivel: 'admin' }
-                ];
-                
-                const usuarioValido = usuariosValidos.find(u => 
-                    u.usuario === username && u.senha === password
-                );
-                
-                if (usuarioValido) {
-                    // Salvar sessão
-                    const usuarioData = {
-                        nome: usuarioValido.nome,
-                        usuario: usuarioValido.usuario,
-                        nivel: usuarioValido.nivel,
-                        dataLogin: new Date().toISOString()
-                    };
-                    
-                    if (rememberMe) {
-                        localStorage.setItem('sismed_usuario', JSON.stringify(usuarioData));
-                    } else {
-                        sessionStorage.setItem('sismed_usuario', JSON.stringify(usuarioData));
-                    }
-                    
-                    // Redirecionar
-                    window.location.href = './rotina.html';
-                } else {
-                    showMessage('Usuário ou senha incorretos!', 'error');
-                    loginBtn.classList.remove('loading');
-                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no Sistema';
+            html += `
+              <div class="user-item">
+                <div class="user-info">
+                  <div class="user-name">👤 ${user.username}</div>
+                  <div class="user-id">ID: ${user.id.substring(0, 12)}...</div>
+                  <div class="user-details">
+                    Criado: ${new Date(user.created_at).toLocaleDateString('pt-BR')}<br>
+                    Status: ${user.status}
+                  </div>
+                </div>
+                <div class="user-actions">
+                  <button onclick="deleteUser('${user.id}', '${user.username}')" class="btn-danger">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+          
+          usersList.innerHTML = html;
+          document.getElementById('totalUsers').textContent = response.count;
+          document.getElementById('activeUsers').textContent = activeCount;
+          showMessage(`✅ ${response.count} usuário(s) carregado(s)`, 'success');
+        })
+        .withFailureHandler(function(error) {
+          usersList.innerHTML = '<div class="empty-state">❌ Erro ao carregar usuários</div>';
+          showMessage('❌ Erro: ' + error.message, 'error');
+        })
+        .getUsers();
+    }
+    
+    // Deletar usuário
+    function deleteUser(userId, username) {
+      if (!confirm(`Tem certeza que deseja excluir o usuário "${username}"?`)) {
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          showMessage(`✅ Usuário "${username}" excluído`, 'success');
+          loadUsers();
+        })
+        .withFailureHandler(function(error) {
+          showMessage('❌ Erro: ' + error.message, 'error');
+        })
+        .deleteUser({parameter: {user_id: userId}});
+    }
+    
+    // Deletar todos os usuários
+    function deleteAllUsers() {
+      if (!confirm('ATENÇÃO: Isso excluirá TODOS os usuários. Continuar?')) {
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          showMessage('Carregando usuários para exclusão...', 'info');
+          loadUsersForDeletion();
+        })
+        .withFailureHandler(function(error) {
+          showMessage('❌ Erro: ' + error.message, 'error');
+        })
+        .getUsers();
+    }
+    
+    function loadUsersForDeletion() {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.users.length === 0) {
+            showMessage('Nenhum usuário para excluir', 'info');
+            return;
+          }
+          
+          let deleted = 0;
+          let errors = 0;
+          
+          response.users.forEach(user => {
+            google.script.run
+              .withSuccessHandler(function() {
+                deleted++;
+                if (deleted + errors === response.users.length) {
+                  showMessage(`✅ ${deleted} usuário(s) excluído(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`, 
+                    errors > 0 ? 'error' : 'success');
+                  loadUsers();
                 }
-            }, 1500);
-        });
-        
-        // Funções auxiliares
-        function showRecovery() {
-            showMessage('Entre em contato com o administrador do sistema.', 'info');
-        }
-        
-        function showSupport() {
-            showMessage('Suporte: suporte@sismed.example.com | (11) 99999-9999', 'info');
-        }
-        
-        // Auto-focus no campo de usuário
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('username').focus();
-            
-            // Preencher automaticamente para teste (remover em produção)
-            document.getElementById('username').value = 'medico';
-            document.getElementById('password').value = '123456';
-        });
-    </script>
+              })
+              .withFailureHandler(function() {
+                errors++;
+                if (deleted + errors === response.users.length) {
+                  showMessage(`✅ ${deleted} usuário(s) excluído(s)${errors > 0 ? `, ${errors} erro(s)` : ''}`, 
+                    errors > 0 ? 'error' : 'success');
+                  loadUsers();
+                }
+              })
+              .deleteUser({parameter: {user_id: user.id}});
+          });
+        })
+        .withFailureHandler(function(error) {
+          showMessage('❌ Erro: ' + error.message, 'error');
+        })
+        .getUsers();
+    }
+    
+    // Verificar nome de usuário
+    function checkUser() {
+      const username = document.getElementById('checkUsername').value.trim();
+      const checkResult = document.getElementById('checkResult');
+      
+      if (!username) {
+        checkResult.textContent = 'Digite um nome de usuário';
+        checkResult.className = 'message error';
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.available) {
+            checkResult.textContent = `✅ "${username}" está disponível!`;
+            checkResult.className = 'message success';
+          } else {
+            checkResult.textContent = `❌ "${username}" já está em uso`;
+            checkResult.className = 'message error';
+          }
+        })
+        .withFailureHandler(function(error) {
+          checkResult.textContent = '❌ Erro: ' + error.message;
+          checkResult.className = 'message error';
+        })
+        .checkUsername({parameter: {username: username}});
+    }
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      checkConnection();
+    });
+  </script>
 </body>
 </html>
